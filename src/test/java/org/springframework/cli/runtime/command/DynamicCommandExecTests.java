@@ -65,6 +65,13 @@ public class DynamicCommandExecTests {
 		assertThat(result).hasContent("ls.txt");
 	}
 
+	@Test
+	@DisabledOnOs(OS.WINDOWS)
+	void testDefine(@TempDir Path tmp) throws IOException {
+		Map<String, Object> model = new HashMap<>();
+		runCommand("define", "var", model, "src/test/resources/org/springframework/cli/runtime/command/exec");
+	}
+
 	public void runCommand(String noun, String verb, Map<String, Object> model, String commandLocation) throws IOException {
 		DynamicCommand dynamicCommand = new DynamicCommand(noun, verb, Collections.emptyList());
 		dynamicCommand.runCommand(Paths.get(commandLocation), null, null, null, model);

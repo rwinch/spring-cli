@@ -1,0 +1,11 @@
+---
+action:
+  exec:
+    define:
+      name: foo
+      jsonPath: bar
+    args:
+      - uname
+      - -a
+---
+IGNORED

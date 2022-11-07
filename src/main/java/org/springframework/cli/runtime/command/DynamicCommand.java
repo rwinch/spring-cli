@@ -17,8 +17,11 @@
 
 package org.springframework.cli.runtime.command;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -193,6 +196,7 @@ public class DynamicCommand {
 			throw new SpringCliException("Error evaluating exec working directory. Expression: " + exec.getDir(), e);
 		}
 
+		// If exec.getTo is set, it is the relative path to which to redirect stdout of the running process.
 		if (exec.getTo() != null) {
 			try {
 				String execto = templateEngine.process(exec.getTo(), model);
@@ -204,6 +208,7 @@ public class DynamicCommand {
 			}
 		}
 
+		// If exec.getErrto() is set, the relative path to which to redirect stderr of the running process.
 		if (exec.getErrto() != null) {
 			try {
 				String execerrto = templateEngine.process(exec.getErrto(), model);
@@ -213,8 +218,12 @@ public class DynamicCommand {
 				throw new SpringCliException("Error evaluating exec error file. Expression: " + exec.getErrto(), e);
 			}
 		}
+
+
 		Path tmpDir = null;
+		//	 If exec.isIn is true, use the rendered body of the template as stdin of the running process.
 		if (exec.isIn()) {
+
 			try {
 				tmpDir = Files.createTempDirectory("exec");
 			}
@@ -232,6 +241,14 @@ public class DynamicCommand {
 
 		try {
 			Process process = processBuilder.start();
+			// experimental - capture the output.
+			String stdout = "";
+			String stderr = "";
+			if (exec.getTo() == null && exec.getErrto() == null) {
+				stdout = readStringFromInputStream(process.getInputStream());
+				stderr = readStringFromInputStream(process.getErrorStream());
+			}
+
 			boolean exited = process.waitFor(300, TimeUnit.SECONDS);
 			if (exited) {
 				if (process.exitValue() == 0) {
@@ -242,6 +259,7 @@ public class DynamicCommand {
 					System.out.println("Command '" + StringUtils.collectionToDelimitedString(processedArgs, " ") + "' exited with value " + process.exitValue());
 				}
 			}
+			System.out.println("STDOUT = " + stdout);
 		}
 		catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
@@ -264,6 +282,17 @@ public class DynamicCommand {
 			}
 		}
 
+	}
+
+	private String readStringFromInputStream(InputStream input) {
+		final String newline = System.getProperty("line.separator");
+		try (BufferedReader buffer = new BufferedReader(new InputStreamReader(input))) {
+			return buffer.lines().collect(Collectors.joining(newline));
+		}
+		catch (IOException e) {
+			logger.error("Could not read command output: " + e.getMessage());
+		}
+		return null;
 	}
 
 	private void generateFile(CommandActionFileContents commandActionFileContents, TemplateEngine templateEngine, String toFileName, boolean overwrite, Map<String, Object> model, Path cwd) throws IOException {
