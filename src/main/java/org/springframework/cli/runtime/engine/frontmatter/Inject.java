@@ -38,6 +38,8 @@ public class Inject {
 
 	private final String skip;
 
+	private final String text;
+
 	@Nullable
 	public String getBefore() {
 		return before;
@@ -56,9 +58,15 @@ public class Inject {
 		return skip;
 	}
 
+	public String getText() {
+		return text;
+	}
+
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	Inject(@JsonProperty("to") String to, @JsonProperty("skip") String skip, @JsonProperty("before") String before,
+	Inject(@JsonProperty("text") String text, @JsonProperty("to") String to,
+			@JsonProperty("skip") String skip, @JsonProperty("before") String before,
 			@JsonProperty("after") String after) {
+		this.text = text;
 		this.to = Objects.requireNonNull(to);
 		this.skip = Objects.requireNonNull(skip);
 		this.before = before;
@@ -67,13 +75,12 @@ public class Inject {
 
 	@Override
 	public String toString() {
-		final StringBuffer sb = new StringBuffer("Inject{");
-		sb.append("before='").append(before).append('\'');
-		sb.append(", after='").append(after).append('\'');
-		sb.append(", to='").append(to).append('\'');
-		sb.append(", skip='").append(skip).append('\'');
-		sb.append('}');
-		return sb.toString();
+		return "Inject{" +
+				"before='" + before + '\'' +
+				", after='" + after + '\'' +
+				", to='" + to + '\'' +
+				", skip='" + skip + '\'' +
+				", text='" + text + '\'' +
+				'}';
 	}
-
 }

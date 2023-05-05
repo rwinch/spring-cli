@@ -62,9 +62,9 @@ public class InjectAction {
 		this.terminalMessage = terminalMessage;
 	}
 
-	public void execute(Inject inject, CommandActionFileContents commandActionFileContents) {
+	public void execute(Inject inject) {
 		Path fileToInject = getFileToInject(inject, templateEngine, model, cwd);
-		inject(fileToInject, commandActionFileContents, templateEngine, inject, model);
+		inject(fileToInject, templateEngine, inject, model);
 	}
 
 	/**
@@ -89,7 +89,7 @@ public class InjectAction {
 		return pathToFile;
 	}
 
-	private void inject(Path pathToFile, CommandActionFileContents commandActionFileContents, TemplateEngine templateEngine, Inject inject, Map<String, Object> model) {
+	private void inject(Path pathToFile, TemplateEngine templateEngine, Inject inject, Map<String, Object> model) {
 		Path newFile = Paths.get(pathToFile + ".new");
 		boolean shouldInject = shouldInjectFile(inject.getSkip(), pathToFile.toFile());
 		if (!shouldInject) {
@@ -101,7 +101,7 @@ public class InjectAction {
 			if (StringUtils.hasText(inject.getBefore())) {
 				int injectIndex = indexFromMarkerString(inject.getBefore(), lines);
 				if (injectIndex != -1) {
-					String result = templateEngine.process(commandActionFileContents.getText(), model);
+					String result = templateEngine.process(inject.getText(), model);
 					lines.add(injectIndex, result);
 				}
 				else {
@@ -112,7 +112,7 @@ public class InjectAction {
 			if (StringUtils.hasText(inject.getAfter())) {
 				int injectIndex = indexFromMarkerString(inject.getAfter(), lines);
 				if (injectIndex != -1) {
-					String result = templateEngine.process(commandActionFileContents.getText(), model);
+					String result = templateEngine.process(inject.getText(), model);
 					lines.add(injectIndex + 1, result);
 				}
 				else {

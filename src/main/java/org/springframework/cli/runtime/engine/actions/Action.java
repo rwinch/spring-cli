@@ -14,11 +14,17 @@
  * limitations under the License.
  */
 
-package org.springframework.cli.runtime.engine.frontmatter;
+package org.springframework.cli.runtime.engine.actions;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import org.springframework.cli.runtime.engine.frontmatter.Exec;
+import org.springframework.cli.runtime.engine.frontmatter.Generate;
+import org.springframework.cli.runtime.engine.frontmatter.Inject;
+import org.springframework.cli.runtime.engine.frontmatter.InjectMavenDependency;
+import org.springframework.cli.runtime.engine.frontmatter.InjectMavenPlugin;
+import org.springframework.cli.runtime.engine.frontmatter.InjectProperties;
 import org.springframework.lang.Nullable;
 
 /**
@@ -35,25 +41,13 @@ public class Action {
 	 * contain template placeholders. If this is null, the file is not rendered.
 	 */
 	@Nullable
-	private String generate;
+	private Generate generate;
 
 	@Nullable
 	private final Inject inject;
 
 	@Nullable
 	private Exec exec;
-
-
-	/**
-	 * If set to false, generation of the template is skipped if the {@link #generate
-	 * destination file} already exists.
-	 */
-	private boolean overwrite; // TODO Perhaps this should be nested inside the generate actions as it only pertains to them.
-
-	/**
-	 * If set to true, the results of the text template engine is printed to the console.
-	 */
-	private boolean console;  // TODO consider renaming to 'debug' or something?
 
 
 	// TODO These actions are 'recipes' and should be extracted into a more formal recipe section
@@ -70,15 +64,13 @@ public class Action {
 	private final InjectProperties injectProperties;
 
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	Action(@JsonProperty("generate") @Nullable String generate, @JsonProperty("overwrite") boolean overwrite,
-			@JsonProperty("console") boolean console, @JsonProperty("exec") @Nullable Exec exec,
+	Action(@JsonProperty("generate") @Nullable Generate generate,
+			@JsonProperty("exec") @Nullable Exec exec,
 			@JsonProperty("injectMavenPlugin") @Nullable InjectMavenPlugin injectMavenPlugin,
 			@JsonProperty("injectMavenDependency") @Nullable InjectMavenDependency injectMavenDependency,
 			@JsonProperty("injectProperties") @Nullable InjectProperties injectProperties,
 			@JsonProperty("inject") @Nullable Inject inject) {
 		this.generate = generate;
-		this.overwrite = overwrite;
-		this.console = console;
 		this.exec = exec;
 		this.injectMavenPlugin = injectMavenPlugin;
 		this.injectMavenDependency = injectMavenDependency;
@@ -87,16 +79,8 @@ public class Action {
 	}
 
 	@Nullable
-	public String getGenerate() {
+	public Generate getGenerate() {
 		return generate;
-	}
-
-	public boolean getConsole() {
-		return console;
-	}
-
-	public boolean isOverwrite() {
-		return overwrite;
 	}
 
 	@Nullable
@@ -126,9 +110,13 @@ public class Action {
 
 	@Override
 	public String toString() {
-		return "Action{" + "to='" + generate + '\'' + ", overwrite=" + overwrite + ", console=" + console + ", exec=" + exec
-				+ ", injectMavenPlugin=" + injectMavenPlugin + ", injectMavenDependency=" + injectMavenDependency
-				+ ", injectProperties=" + injectProperties + ", inject=" + inject + '}';
+		return "Action{" +
+				"generate=" + generate +
+				", inject=" + inject +
+				", exec=" + exec +
+				", injectMavenPlugin=" + injectMavenPlugin +
+				", injectMavenDependency=" + injectMavenDependency +
+				", injectProperties=" + injectProperties +
+				'}';
 	}
-
 }

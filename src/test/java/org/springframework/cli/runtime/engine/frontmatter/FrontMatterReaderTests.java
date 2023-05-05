@@ -18,6 +18,7 @@ package org.springframework.cli.runtime.engine.frontmatter;
 
 import org.junit.jupiter.api.Test;
 
+import org.springframework.cli.runtime.engine.actions.Action;
 import org.springframework.cli.testutil.TestResourceUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;

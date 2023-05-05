@@ -22,13 +22,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,13 +52,13 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.cli.SpringCliException;
 import org.springframework.cli.runtime.command.action.InjectAction;
-import org.springframework.cli.runtime.engine.frontmatter.Action;
-import org.springframework.cli.runtime.engine.frontmatter.CommandActionFileContents;
+import org.springframework.cli.runtime.engine.actions.Action;
+import org.springframework.cli.runtime.engine.actions.ActionFileReader;
+import org.springframework.cli.runtime.engine.actions.ActionFileVisitor;
+import org.springframework.cli.runtime.engine.actions.ActionsFile;
 import org.springframework.cli.runtime.engine.frontmatter.Conditional;
 import org.springframework.cli.runtime.engine.frontmatter.Exec;
-import org.springframework.cli.runtime.engine.frontmatter.FrontMatter;
-import org.springframework.cli.runtime.engine.frontmatter.FrontMatterFileVisitor;
-import org.springframework.cli.runtime.engine.frontmatter.FrontMatterReader;
+import org.springframework.cli.runtime.engine.frontmatter.Generate;
 import org.springframework.cli.runtime.engine.frontmatter.Inject;
 import org.springframework.cli.runtime.engine.model.ModelPopulator;
 import org.springframework.cli.runtime.engine.templating.HandlebarsTemplateEngine;
@@ -141,13 +138,13 @@ public class DynamicCommand {
 			}
 		}
 
-		final Map<Path, CommandActionFileContents> commandActionFiles = findCommandActionFiles(dynamicSubCommandPath);
+		final Map<Path, ActionsFile> commandActionFiles = findCommandActionFiles(dynamicSubCommandPath);
 		if (commandActionFiles.size() == 0) {
 			throw new SpringCliException("No command action files found to process in directory " + dynamicSubCommandPath.toAbsolutePath());
 		}
 
 		try {
-			processCommandActionFiles(commandActionFiles, workingDirectory, model);
+			processCommandActionFiles(commandActionFiles, workingDirectory, dynamicSubCommandPath, model);
 		} catch (SpringCliException e) {
 			AttributedStringBuilder sb = new AttributedStringBuilder();
 			sb.style(sb.style().foreground(AttributedStyle.RED));
@@ -157,50 +154,55 @@ public class DynamicCommand {
 
 	}
 
-	private void processCommandActionFiles(Map<Path, CommandActionFileContents> commandActionFiles, Path cwd, Map<String, Object> model) {
+	private void processCommandActionFiles(Map<Path, ActionsFile> commandActionFiles, Path cwd, Path dynamicSubCommandPath, Map<String, Object> model) {
 
-		for (Entry<Path, CommandActionFileContents> kv : commandActionFiles.entrySet()) {
+		for (Entry<Path, ActionsFile> kv : commandActionFiles.entrySet()) {
 			Path path = kv.getKey();
-			CommandActionFileContents commandActionFileContents = kv.getValue();
+			ActionsFile actionsFile = kv.getValue();
 
-			FrontMatter frontMatter = commandActionFileContents.getFrontMatter();
-			if (frontMatter.getConditional() != null) {
-				checkConditional(frontMatter.getConditional(), model, cwd, path);
+			//CommandActionFileContents commandActionFileContents = kv.getValue();
+			//FrontMatter frontMatter = commandActionFileContents.getFrontMatter();
+
+			if (actionsFile.getConditional() != null) {
+				checkConditional(actionsFile.getConditional(), model, cwd, path);
 			}
 
-			Action action = frontMatter.getAction();
-			if (action == null) {
+			List<Action> actions = actionsFile.getActions();
+			if (actions.isEmpty()) {
 				terminalMessage.print("No actions to execute in " + path.toAbsolutePath());
 				continue;
 			}
 			TemplateEngine templateEngine = new HandlebarsTemplateEngine();
 
-			String generate = action.getGenerate();
-			if (StringUtils.hasText(generate)) {
-				// This allows for variable replacement in the name of the generated file
-				String toFileName = templateEngine.process(generate, model);
-				if (StringUtils.hasText(toFileName)) {
-					try {
-						generateFile(commandActionFileContents, templateEngine, toFileName, action.isOverwrite(), model, cwd);
-					}
-					catch (IOException e) {
-						terminalMessage.print("Could not generate file " + toFileName);
-						terminalMessage.print(e.getMessage());
+			for (Action action : actions) {
+				Generate generate = action.getGenerate();
+				if (generate != null) {
+					if (StringUtils.hasText(generate.getText())) {
+						// This allows for variable replacement in the name of the generated file
+						String toFileName = templateEngine.process(generate.getTo(), model);
+						if (StringUtils.hasText(toFileName)) {
+							try {
+								generateFile(generate, templateEngine, toFileName, model, cwd);
+							}
+							catch (IOException e) {
+								terminalMessage.print("Could not generate file " + toFileName);
+								terminalMessage.print(e.getMessage());
+							}
+						}
 					}
 				}
-			}
 
-			Inject inject = action.getInject();
-			if (inject != null) {
-				InjectAction injectAction = new InjectAction(templateEngine, model, cwd, terminalMessage);
-				injectAction.execute(inject, commandActionFileContents);
-			}
+				Inject inject = action.getInject();
+				if (inject != null) {
+					InjectAction injectAction = new InjectAction(templateEngine, model, cwd, terminalMessage);
+					injectAction.execute(inject);
+				}
 
-			Exec exec = action.getExec();
-			if (exec != null) {
-				executeShellCommand(exec, templateEngine, model, commandActionFileContents);
+				Exec exec = action.getExec();
+				if (exec != null) {
+					executeShellCommand(exec, templateEngine, model, dynamicSubCommandPath);
+				}
 			}
-
 		}
 
 
@@ -218,25 +220,43 @@ public class DynamicCommand {
 		}
 	}
 
-	private void executeShellCommand(Exec exec, TemplateEngine templateEngine, Map<String, Object> model, CommandActionFileContents commandActionFileContents) {
-		List<String> args = exec.getArgs();
-		if (args.size() == 0) {
-			// TODO indicate which action file has an issue.
-			throw new SpringCliException("No arguments provided to exec command.  First argument is usually the name of the executable.  Action File contents = " + commandActionFileContents.getText());
+	private void executeShellCommand(Exec exec, TemplateEngine templateEngine, Map<String, Object> model, Path dynamicSubCommandPath) {
+		if (!StringUtils.hasText(exec.getCommand()) && !StringUtils.hasText(exec.getCommandFile())) {
+			throw new SpringCliException("No text found for command: or command-file: field in exec action.");
 		}
-		List<String> processedArgs = new ArrayList<>();
 
-		for (String arg : args) {
-			try {
-				String objectResult = templateEngine.process(arg, model);
-				processedArgs.add(objectResult);
-			}
-			catch (Exception ex) {
-				throw new SpringCliException("Error evaluating exec argument expression. Expression: " + arg, ex);
+		String commandToUse;
+		if (StringUtils.hasText(exec.getCommand())) {
+			commandToUse = templateEngine.process(exec.getCommand(), model);
+		} else {
+			String commandFileAsString = exec.getCommandFile();
+			Path commandFilePath = Paths.get(String.valueOf(dynamicSubCommandPath), commandFileAsString);
+			if (Files.exists(commandFilePath) && Files.isRegularFile(commandFilePath)) {
+				try {
+					List<String> lines = Files.readAllLines(commandFilePath);
+					commandToUse = templateEngine.process(lines.get(0), model);
+				}
+				catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			} else {
+				throw new SpringCliException("Can not read file: " + commandFilePath.toAbsolutePath());
 			}
 		}
-		String[] actionCommandArgs = processedArgs.toArray(new String[0]);
-		ProcessBuilder processBuilder = new ProcessBuilder(actionCommandArgs);
+//		List<String> processedArgs = new ArrayList<>();
+
+//		for (String arg : args) {
+//			try {
+//				String objectResult = templateEngine.process(arg, model);
+//				processedArgs.add(objectResult);
+//			}
+//			catch (Exception ex) {
+//				throw new SpringCliException("Error evaluating exec argument expression. Expression: " + arg, ex);
+//			}
+//		}
+		String[] commands = {"bash", "-c", commandToUse};
+
+		ProcessBuilder processBuilder = new ProcessBuilder(commands);
 		try {
 			String dir = templateEngine.process(exec.getDir(), model);
 			processBuilder.directory(new File(dir).getCanonicalFile());
@@ -271,25 +291,25 @@ public class DynamicCommand {
 
 		Path tmpDir = null;
 		//	 If exec.isIn is true, use the rendered body of the template as stdin of the running process.
-		if (exec.isIn()) {
-
-			try {
-				tmpDir = Files.createTempDirectory("exec");
-			}
-			catch (IOException e) {
-				throw new SpringCliException("Could not create temp directory.", e);
-			}
-			try {
-				generateFile(commandActionFileContents, templateEngine, "stdin", true, model, tmpDir);
-			}
-			catch (IOException e) {
-				throw new SpringCliException("Could not generate stdin file.", e);
-			}
-			processBuilder.redirectInput(tmpDir.resolve("stdin").toFile());
-		}
+//		if (exec.isIn()) {
+//
+//			try {
+//				tmpDir = Files.createTempDirectory("exec");
+//			}
+//			catch (IOException e) {
+//				throw new SpringCliException("Could not create temp directory.", e);
+//			}
+//			try {
+//				generateFile(commandActionFileContents, templateEngine, "stdin", true, model, tmpDir);
+//			}
+//			catch (IOException e) {
+//				throw new SpringCliException("Could not generate stdin file.", e);
+//			}
+//			processBuilder.redirectInput(tmpDir.resolve("stdin").toFile());
+//		}
 
 		try {
-			terminalMessage.print("Executing: " + StringUtils.collectionToDelimitedString(processedArgs, " ") );
+			terminalMessage.print("Executing: " + StringUtils.arrayToDelimitedString(commands, " ") );
 			Process process = processBuilder.start();
 			// capture the output.
 			String stderr = "";
@@ -302,7 +322,7 @@ public class DynamicCommand {
 			boolean exited = process.waitFor(300, TimeUnit.SECONDS);
 			if (exited) {
 				if (process.exitValue() == 0) {
-					terminalMessage.print("Command '" + StringUtils.collectionToDelimitedString(processedArgs, " ") + "' executed successfully");
+					terminalMessage.print("Command '" + StringUtils.arrayToDelimitedString(commands, " ") + "' executed successfully");
 					if (exec.getDefine() != null) {
 						if (exec.getDefine().getName() != null && exec.getDefine().getJsonPath() != null) {
 							ObjectMapper mapper = new ObjectMapper();
@@ -323,7 +343,7 @@ public class DynamicCommand {
 					}
 				}
 				else {
-					terminalMessage.print("Command '" + StringUtils.collectionToDelimitedString(processedArgs, " ") + "' exited with value " + process.exitValue());
+					terminalMessage.print("Command '" + StringUtils.arrayToDelimitedString(commands, " ") + "' exited with value " + process.exitValue());
 					terminalMessage.print("stderr = " + stderr);
 				}
 			}
@@ -331,12 +351,12 @@ public class DynamicCommand {
 		catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw new SpringCliException("Execution of command '"
-					+ StringUtils.collectionToDelimitedString(processedArgs, " ") + "' failed", e);
+					+ StringUtils.arrayToDelimitedString(commands, " ") + "' failed", e);
 
 		}
 		catch (IOException e) {
 			throw new SpringCliException("Execution of command '"
-					+ StringUtils.collectionToDelimitedString(processedArgs, " ") + "' failed", e);
+					+ StringUtils.arrayToDelimitedString(commands, " ") + "' failed", e);
 		}
 		finally {
 			if (tmpDir != null) {
@@ -362,20 +382,20 @@ public class DynamicCommand {
 		return null;
 	}
 
-	private void generateFile(CommandActionFileContents commandActionFileContents, TemplateEngine templateEngine, String toFileName, boolean overwrite, Map<String, Object> model, Path cwd) throws IOException {
+	private void generateFile(Generate generate, TemplateEngine templateEngine, String toFileName, Map<String, Object> model, Path cwd) throws IOException {
 		Path pathToFile = cwd.resolve(toFileName).toAbsolutePath();
-		if ((pathToFile.toFile().exists() && overwrite) || (!pathToFile.toFile().exists())) {
-			writeFile(commandActionFileContents, templateEngine, model, pathToFile);
+		if ((pathToFile.toFile().exists() && generate.isOverwrite()) || (!pathToFile.toFile().exists())) {
+			writeFile(generate, templateEngine, model, pathToFile);
 		}
 		else {
 			terminalMessage.print("Skipping generation of " + pathToFile + ".  File exists and overwrite option not specified.");
 		}
 	}
 
-	private void writeFile(CommandActionFileContents commandActionFileContents, TemplateEngine templateEngine,
+	private void writeFile(Generate generate, TemplateEngine templateEngine,
 			Map<String, Object> model, Path pathToFile) throws IOException {
 		Files.createDirectories(pathToFile.getParent());
-		String result = templateEngine.process(commandActionFileContents.getText(), model);
+		String result = templateEngine.process(generate.getText(), model);
 		Files.write(pathToFile, result.getBytes());
 		// TODO: keep log of action taken so can report later.
 		terminalMessage.print("Generated "+ pathToFile);
@@ -395,9 +415,9 @@ public class DynamicCommand {
 		}
 	}
 
-	private Map<Path, CommandActionFileContents> findCommandActionFiles(Path dynamicSubCommandPath) {
-		// Do a first pass to find all files that look parseable...
-		final FrontMatterFileVisitor visitor = new FrontMatterFileVisitor();
+	private Map<Path, ActionsFile> findCommandActionFiles(Path dynamicSubCommandPath) {
+		// Do a first pass to find only text files
+		final ActionFileVisitor visitor = new ActionFileVisitor();
 		try {
 			Files.walkFileTree(dynamicSubCommandPath, visitor);
 		}
@@ -407,7 +427,7 @@ public class DynamicCommand {
 
 		// Then actually parse, retaining only those paths that yielded a result
 		return visitor.getMatches().stream() //
-				.map((p) -> new SimpleImmutableEntry<>(p, FrontMatterReader.read(p))) //
+				.map((p) -> new SimpleImmutableEntry<>(p, ActionFileReader.read(p))) //
 				.filter((kv) -> kv.getValue().isPresent()) //
 				.collect(toSortedMap(Entry::getKey, (e) -> e.getValue().get()));
 	}

@@ -14,48 +14,44 @@
  * limitations under the License.
  */
 
-package org.springframework.cli.runtime.engine.frontmatter;
 
+package org.springframework.cli.runtime.engine.actions;
+
+import java.util.List;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import org.springframework.cli.runtime.engine.actions.Action;
+import org.springframework.cli.runtime.engine.frontmatter.Conditional;
 import org.springframework.lang.Nullable;
 
-/**
- * @author Mark Pollack
- */
-public class FrontMatter {
-	/**
-	 * The actions to execute against the template. If {@code null}, the file is not
-	 * processed.
-	 */
-	private final Action action;
+public class ActionsFile {
 
 	private final Conditional conditional;
 
-	public Action getAction() {
-		return action;
+	private final List<Action> actions;
+
+	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+	ActionsFile(@JsonProperty("actions") @Nullable List<Action> actions,
+			@JsonProperty("conditional") Conditional conditional) {
+		this.actions = Objects.requireNonNull(actions);
+		this.conditional = Objects.requireNonNullElse(conditional, new Conditional());
 	}
 
 	public Conditional getConditional() {
 		return conditional;
 	}
 
-	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	FrontMatter(@JsonProperty("action") @Nullable Action action,
-			@JsonProperty("conditional") Conditional conditional) {
-		this.action = Objects.requireNonNull(action);
-		this.conditional = Objects.requireNonNullElse(conditional, new Conditional());
+	public List<Action> getActions() {
+		return actions;
 	}
 
 	@Override
 	public String toString() {
-		return "FrontMatter{" +
-				"action=" + action +
-				", conditional=" + conditional +
+		return "ActionsFile{" +
+				"conditional=" + conditional +
+				", actions=" + actions +
 				'}';
 	}
 }

@@ -53,13 +53,13 @@ public class DynamicCommandExecTests extends AbstractCommandTests {
 	@Test
 	@DisabledOnOs(OS.WINDOWS)
 	void testRedirections(@TempDir Path tmp) throws IOException {
-		Path result = tmp.resolve("result");
+		Path outputPath = tmp.resolve("result");
 		Map<String, Object> model = new HashMap<>();
-		model.put("output", result.toAbsolutePath().toString());
-		// Run 'ls' in the dir of the ls.txt file itself.
+		model.put("output", outputPath.toAbsolutePath().toString());
+		// Run 'ls' in the dir of the ls-action.yml file itself.
 		model.put("work-dir", "src/test/resources/org/springframework/cli/runtime/command/exec/working/dir");
 		runCommand("working", "dir", model, "src/test/resources/org/springframework/cli/runtime/command/exec");
-		assertThat(result).hasContent("ls.txt");
+		assertThat(outputPath).hasContent("ls-action.yml");
 	}
 
 	@Test
@@ -71,5 +71,7 @@ public class DynamicCommandExecTests extends AbstractCommandTests {
 		runCommand("define", "var", model, "src/test/resources/org/springframework/cli/runtime/command/exec");
 		assertThat(tempFile).hasContent("Hello iPhone");
 	}
+
+
 
 }

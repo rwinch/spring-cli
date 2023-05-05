@@ -33,12 +33,6 @@ import org.springframework.lang.Nullable;
 public class Exec {
 
 	/**
-	 * The args of the process to run. The first elements of this list is the executable
-	 * to run and is hence required.
-	 */
-	private final List<String> args;
-
-	/**
 	 * If set, the relative path to which to redirect stdout of the running process.
 	 */
 	@Nullable
@@ -51,10 +45,16 @@ public class Exec {
 	private final String errto;
 
 	/**
-	 * If set to {@code true}, use the rendered body of the template as stdin of the
-	 * running process.
+	 * Use the rendered body of the field as stdin of the running process.
 	 */
-	private final boolean in;
+	private String stdIn;
+
+	/**
+	 * The command to run/execute.
+	 */
+	private String command;
+
+	private String commandFile;
 
 	/**
 	 * If set, the path (relative to the current engine working directory) to use as the
@@ -65,18 +65,16 @@ public class Exec {
 	private final Define define;
 
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	Exec(@JsonProperty("args") List<String> args, @JsonProperty("to") String to, @JsonProperty("errto") String errto,
-			@JsonProperty("in") boolean in, @JsonProperty("dir") String dir, @JsonProperty("define") Define define) {
-		this.args = Objects.requireNonNullElse(args, new ArrayList<>());
+	Exec(@JsonProperty("to") String to, @JsonProperty("command") String command,
+			@JsonProperty("command-file") String commandFile,
+			@JsonProperty("errto") String errto,
+			@JsonProperty("dir") String dir, @JsonProperty("define") Define define) {
 		this.to = to;
+		this.command = command;
+		this.commandFile = commandFile;
 		this.errto = errto;
-		this.in = in;
 		this.dir = Objects.requireNonNullElse(dir, "");
 		this.define = define;
-	}
-
-	public List<String> getArgs() {
-		return args;
 	}
 
 	@Nullable
@@ -84,13 +82,17 @@ public class Exec {
 		return to;
 	}
 
+	public String getCommand() {
+		return command;
+	}
+
+	public String getCommandFile() {
+		return commandFile;
+	}
+
 	@Nullable
 	public String getErrto() {
 		return errto;
-	}
-
-	public boolean isIn() {
-		return in;
 	}
 
 	public String getDir() {
@@ -104,10 +106,11 @@ public class Exec {
 	@Override
 	public String toString() {
 		return "Exec{" +
-				"args=" + args +
-				", to='" + to + '\'' +
+				"to='" + to + '\'' +
 				", errto='" + errto + '\'' +
-				", in=" + in +
+				", stdIn='" + stdIn + '\'' +
+				", command='" + command + '\'' +
+				", commandFile='" + commandFile + '\'' +
 				", dir='" + dir + '\'' +
 				", define=" + define +
 				'}';
