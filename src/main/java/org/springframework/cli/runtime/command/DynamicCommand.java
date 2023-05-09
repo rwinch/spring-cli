@@ -51,15 +51,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.cli.SpringCliException;
-import org.springframework.cli.runtime.command.action.InjectAction;
+import org.springframework.cli.runtime.engine.actions.handlers.InjectActionHandler;
 import org.springframework.cli.runtime.engine.actions.Action;
 import org.springframework.cli.runtime.engine.actions.ActionFileReader;
 import org.springframework.cli.runtime.engine.actions.ActionFileVisitor;
 import org.springframework.cli.runtime.engine.actions.ActionsFile;
-import org.springframework.cli.runtime.engine.frontmatter.Conditional;
-import org.springframework.cli.runtime.engine.frontmatter.Exec;
-import org.springframework.cli.runtime.engine.frontmatter.Generate;
-import org.springframework.cli.runtime.engine.frontmatter.Inject;
+import org.springframework.cli.runtime.engine.actions.Conditional;
+import org.springframework.cli.runtime.engine.actions.Exec;
+import org.springframework.cli.runtime.engine.actions.Generate;
+import org.springframework.cli.runtime.engine.actions.Inject;
 import org.springframework.cli.runtime.engine.model.ModelPopulator;
 import org.springframework.cli.runtime.engine.templating.HandlebarsTemplateEngine;
 import org.springframework.cli.runtime.engine.templating.TemplateEngine;
@@ -104,7 +104,7 @@ public class DynamicCommand {
 	public void execute(CommandContext commandContext) throws IOException {
 		Map<String, Object> model = new HashMap<>();
 		addMatchedOptions(model, commandContext);
-		runCommand(IoUtils.getWorkingDirectory(), ".spring", "commands", commandContext, model);
+		runCommand(IoUtils.getWorkingDirectory(), ".spring", "commands", model);
 	}
 
 
@@ -120,21 +120,21 @@ public class DynamicCommand {
 
 
 	public void runCommand(Path workingDirectory, String springDir, String commandsDir,
-			CommandContext commandContext, Map<String, Object> model) throws IOException {
+			Map<String, Object> model)  {
 		Path dynamicSubCommandPath;
 		if (StringUtils.hasText(springDir) && StringUtils.hasText(commandsDir)) {
 			dynamicSubCommandPath = Paths.get(workingDirectory.toString(), springDir, commandsDir)
 					.resolve(this.commandName).resolve(this.subCommandName).toAbsolutePath();
 		} else {
+			// Used in testing w/o .spring/commands subdirectories
 			dynamicSubCommandPath = Paths.get(workingDirectory.toString())
 					.resolve(this.commandName).resolve(this.subCommandName).toAbsolutePath();
 		}
 
-
 		// Enrich the model with detected features of the project, e.g. maven artifact name
 		if (this.modelPopulators != null) {
 			for (ModelPopulator modelPopulator : modelPopulators) {
-				modelPopulator.contributeToModel(workingDirectory, model);
+				modelPopulator.contributeToModel(IoUtils.getWorkingDirectory(), model);
 			}
 		}
 
@@ -159,9 +159,6 @@ public class DynamicCommand {
 		for (Entry<Path, ActionsFile> kv : commandActionFiles.entrySet()) {
 			Path path = kv.getKey();
 			ActionsFile actionsFile = kv.getValue();
-
-			//CommandActionFileContents commandActionFileContents = kv.getValue();
-			//FrontMatter frontMatter = commandActionFileContents.getFrontMatter();
 
 			if (actionsFile.getConditional() != null) {
 				checkConditional(actionsFile.getConditional(), model, cwd, path);
@@ -194,8 +191,8 @@ public class DynamicCommand {
 
 				Inject inject = action.getInject();
 				if (inject != null) {
-					InjectAction injectAction = new InjectAction(templateEngine, model, cwd, terminalMessage);
-					injectAction.execute(inject);
+					InjectActionHandler injectActionHandler = new InjectActionHandler(templateEngine, model, cwd, terminalMessage);
+					injectActionHandler.execute(inject);
 				}
 
 				Exec exec = action.getExec();

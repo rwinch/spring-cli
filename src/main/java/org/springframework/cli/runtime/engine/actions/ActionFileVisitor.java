@@ -25,15 +25,14 @@ import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.cli.runtime.engine.frontmatter.CommandActionFileContents;
-import org.springframework.cli.runtime.engine.frontmatter.PathGatheringFileVisitor;
+import org.springframework.cli.util.PathGatheringFileVisitor;
 
 /**
- * A {@link FileVisitor} that walks a directory structure looking for files that are to be
- * handled as {@link CommandActionFileContents} (omitting some well known directory and filename
- * patterns).
+ * A {@link FileVisitor} that walks a directory structure looking for text files
+ * to processes as determined by the Tika
  *
  * @author Eric Bottard
+ * @author Mark Pollack
  */
 public class ActionFileVisitor extends PathGatheringFileVisitor {
 

@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package org.springframework.cli.runtime.engine.frontmatter;
+package org.springframework.cli.runtime.engine.actions;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;

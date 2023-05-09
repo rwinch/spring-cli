@@ -35,6 +35,10 @@ import org.springframework.cli.config.SpringCliUserConfig.ProjectRepositories;
 import org.springframework.cli.config.SpringCliUserConfig.ProjectRepository;
 import org.springframework.cli.git.GitSourceRepositoryService;
 import org.springframework.cli.git.SourceRepositoryService;
+import org.springframework.cli.runtime.engine.model.MavenModelPopulator;
+import org.springframework.cli.runtime.engine.model.ModelPopulator;
+import org.springframework.cli.runtime.engine.model.RootPackageModelPopulator;
+import org.springframework.cli.runtime.engine.model.SystemModelPopulator;
 import org.springframework.cli.util.PomReader;
 import org.springframework.cli.util.TerminalMessage;
 import org.springframework.context.annotation.Bean;
@@ -226,6 +230,26 @@ public class BootCommandsTests {
 				SourceRepositoryService sourceRepositoryService) {;
 			BootCommands bootCommands = new BootCommands(springCliUserConfig, sourceRepositoryService, TerminalMessage.noop());
 			return bootCommands;
+		}
+
+		@Bean
+		CommandCommands commandCommands(SourceRepositoryService sourceRepositoryService) {
+			return new CommandCommands(sourceRepositoryService, TerminalMessage.noop());
+		}
+
+		@Bean
+		ModelPopulator systemModelPopulator() {
+			return new SystemModelPopulator();
+		}
+
+		@Bean
+		ModelPopulator mavenModelPopulator() {
+			return new MavenModelPopulator();
+		}
+
+		@Bean
+		ModelPopulator rootPackageModelPopulator() {
+			return new RootPackageModelPopulator();
 		}
 	}
 

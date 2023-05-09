@@ -19,12 +19,6 @@ package org.springframework.cli.runtime.engine.actions;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import org.springframework.cli.runtime.engine.frontmatter.Exec;
-import org.springframework.cli.runtime.engine.frontmatter.Generate;
-import org.springframework.cli.runtime.engine.frontmatter.Inject;
-import org.springframework.cli.runtime.engine.frontmatter.InjectMavenDependency;
-import org.springframework.cli.runtime.engine.frontmatter.InjectMavenPlugin;
-import org.springframework.cli.runtime.engine.frontmatter.InjectProperties;
 import org.springframework.lang.Nullable;
 
 /**

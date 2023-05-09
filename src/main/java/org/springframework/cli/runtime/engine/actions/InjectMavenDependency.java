@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the original author or authors.
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,49 +14,43 @@
  * limitations under the License.
  */
 
+package org.springframework.cli.runtime.engine.actions;
 
-package org.springframework.cli.runtime.engine.frontmatter;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Generate {
+/**
+ * @author Mark Pollack
+ */
+public class InjectMavenDependency {
 
 	private final String to;
 
-	private final String text;
-
-	/**
-	 * If set to false, generation of the template is skipped if the {@link #generate
-	 * destination file} already exists.
-	 */
-	private boolean overwrite;
-
-	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	Generate(@JsonProperty("to") String to,  @JsonProperty("text") String text,
-			@JsonProperty("overwrite") boolean overwrite){
-		this.to = to;
-		this.text = text;
-		this.overwrite = overwrite;
-	}
+	private final String skip;
 
 	public String getTo() {
 		return to;
 	}
 
-	public boolean isOverwrite() {
-		return overwrite;
+	public String getSkip() {
+		return skip;
 	}
 
-	public String getText() {
-		return text;
+	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+	InjectMavenDependency(@JsonProperty("to") String to, @JsonProperty("skip") String skip) {
+		this.to = Objects.requireNonNull(to);
+		this.skip = Objects.requireNonNull(skip);
 	}
 
 	@Override
 	public String toString() {
-		return "Generate{" +
-				"to='" + to + '\'' +
-				", text='" + text + '\'' +
-				'}';
+		final StringBuffer sb = new StringBuffer("InjectMavenDependency{");
+		sb.append("to='").append(to).append('\'');
+		sb.append(", skip='").append(skip).append('\'');
+		sb.append('}');
+		return sb.toString();
 	}
+
 }

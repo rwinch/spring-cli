@@ -35,7 +35,7 @@ public class DynamicCommandExecTests extends AbstractCommandTests {
 
 	@Test
 	@DisabledOnOs(OS.WINDOWS)
-	void mkdirTests() throws IOException {
+	void execMkdirTest() throws IOException {
 		String tmpDir = System.getProperty("java.io.tmpdir");
 		Path dir = Paths.get(tmpDir, "foobar");
 		try {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cli.runtime.engine.frontmatter;
+package org.springframework.cli.runtime.engine.actions;
 
 /**
  * Conditions that need to be satisfied for the Action to execute

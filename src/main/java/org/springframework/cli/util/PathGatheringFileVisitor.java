@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cli.runtime.engine.frontmatter;
+package org.springframework.cli.util;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -80,6 +80,9 @@ public class PathGatheringFileVisitor extends SimpleFileVisitor<Path> {
 
 	protected boolean rejectFile(Path file, BasicFileAttributes attrs) {
 		String filename = file.getFileName().toString();
+		if (filename.equalsIgnoreCase("command.yaml") || filename.equalsIgnoreCase("command.yml")) {
+			return true;
+		}
 		return forbiddenFilenamePatterns.stream().anyMatch((p) -> p.matcher(filename).matches());
 	}
 

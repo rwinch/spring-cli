@@ -17,40 +17,46 @@
 
 package org.springframework.cli.runtime.engine.actions;
 
-import java.util.List;
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import org.springframework.lang.Nullable;
+public class Generate {
 
-public class ActionsFile {
+	private final String to;
 
-	private final Conditional conditional;
+	private final String text;
 
-	private final List<Action> actions;
+	/**
+	 * If set to false, generation of the template is skipped if the {@link #generate
+	 * destination file} already exists.
+	 */
+	private boolean overwrite;
 
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	ActionsFile(@JsonProperty("actions") @Nullable List<Action> actions,
-			@JsonProperty("conditional") Conditional conditional) {
-		this.actions = Objects.requireNonNull(actions);
-		this.conditional = Objects.requireNonNullElse(conditional, new Conditional());
+	Generate(@JsonProperty("to") String to,  @JsonProperty("text") String text,
+			@JsonProperty("overwrite") boolean overwrite){
+		this.to = to;
+		this.text = text;
+		this.overwrite = overwrite;
 	}
 
-	public Conditional getConditional() {
-		return conditional;
+	public String getTo() {
+		return to;
 	}
 
-	public List<Action> getActions() {
-		return actions;
+	public boolean isOverwrite() {
+		return overwrite;
+	}
+
+	public String getText() {
+		return text;
 	}
 
 	@Override
 	public String toString() {
-		return "ActionsFile{" +
-				"conditional=" + conditional +
-				", actions=" + actions +
+		return "Generate{" +
+				"to='" + to + '\'' +
+				", text='" + text + '\'' +
 				'}';
 	}
 }

@@ -17,13 +17,13 @@
 
 package org.springframework.cli.runtime.engine.actions;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -31,8 +31,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 
 import org.springframework.cli.SpringCliException;
 import org.springframework.cli.util.FileExtensionUtils;
@@ -64,28 +62,52 @@ public class ActionFileReader {
 					.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			return mapper.readValue(actionFileString, ActionsFile.class);
 		} catch (JsonProcessingException ex) {
-			improveErrorMessage(resource);
+			improveErrorMessage(resource, ex);
 			throw new SpringCliException("Could not deserialize action file " + resource.getDescription(), ex);
 		} catch (IOException ex) {
 			throw new SpringCliException("Could not read resource " + resource.getDescription() + " as a String.", ex);
 		}
 	}
 
-	private static void improveErrorMessage(Resource resource) {
+	private static void improveErrorMessage(Resource resource, JsonProcessingException jsonProcessingException) {
 		try {
 			String actionFileString = asString(resource);
-			BufferedReader reader = new BufferedReader(new StringReader(actionFileString));
-			String line=null;
-			while( (line=reader.readLine()) != null )
-			{
-				if (line.trim().contains("action") && !line.trim().contains("actions:")) {
-					throw new SpringCliException("Could not deserialize action file " + resource.getDescription() +
-							".  You may have forgotton to put a colon after the field 'action'");
-				}
-			}
+
+			List<String> contents = Files.readAllLines(resource.getFile().toPath());
+			checkForMissingColonOnAction(contents, resource, jsonProcessingException);
+			checkForMissingArrayAfterActions(contents, resource, jsonProcessingException);
+//			BufferedReader reader = new BufferedReader(new StringReader(actionFileString));
+//			String line;
+//			while( (line=reader.readLine()) != null )
+//			{
+//				if (line.trim().contains("action") && !line.trim().contains("actions:")) {
+//					throw new SpringCliException("Could not deserialize action file " + resource.getDescription() +
+//							".  You may have forgotton to put a colon after the field 'action'");
+//				}
+//			}
 
 		} catch (IOException ex) {
 			throw new SpringCliException("Could not read resource " + resource.getDescription() + " as a String.", ex);
+		}
+	}
+
+	private static void checkForMissingArrayAfterActions(List<String> contents, Resource resource, JsonProcessingException ex) {
+		for (String line : contents) {
+			if (line.trim().contains("generate:") && !line.trim().contains("-")) {
+				throw new SpringCliException("Could not deserialize action file " + resource.getDescription() +
+						".  You may have forgot to add a '-' in front of 'generate' since an YAML array is needed.  " +
+						"Nested exception message is " + ex.getMessage());
+			}
+		}
+	}
+
+	private static void checkForMissingColonOnAction(List<String> contents, Resource resource, JsonProcessingException ex) {
+		for (String line : contents) {
+			if (line.trim().contains("action") && !line.trim().contains("actions:")) {
+				throw new SpringCliException("Could not deserialize action file " + resource.getDescription() +
+						".  You may have forgot to put a colon after the field 'action'.  " +
+						"Nested exception message is " + ex.getMessage());
+			}
 		}
 	}
 

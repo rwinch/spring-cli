@@ -15,7 +15,7 @@
  */
 
 
-package org.springframework.cli.runtime.command.action;
+package org.springframework.cli.runtime.engine.actions.handlers;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,8 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.cli.SpringCliException;
-import org.springframework.cli.runtime.engine.frontmatter.CommandActionFileContents;
-import org.springframework.cli.runtime.engine.frontmatter.Inject;
+import org.springframework.cli.runtime.engine.actions.Inject;
 import org.springframework.cli.runtime.engine.templating.TemplateEngine;
 import org.springframework.cli.util.TerminalMessage;
 import org.springframework.util.StringUtils;
@@ -42,9 +41,9 @@ import org.springframework.util.StringUtils;
 /**
  * Handles the responsibility of injecting Strings into files.
  */
-public class InjectAction {
+public class InjectActionHandler {
 
-	private static final Logger logger = LoggerFactory.getLogger(InjectAction.class);
+	private static final Logger logger = LoggerFactory.getLogger(InjectActionHandler.class);
 
 
 	private TemplateEngine templateEngine;
@@ -55,7 +54,7 @@ public class InjectAction {
 
 	private TerminalMessage terminalMessage;
 
-	public InjectAction(TemplateEngine templateEngine, Map<String, Object> model, Path cwd, TerminalMessage terminalMessage) {
+	public InjectActionHandler(TemplateEngine templateEngine, Map<String, Object> model, Path cwd, TerminalMessage terminalMessage) {
 		this.templateEngine = templateEngine;
 		this.model = model;
 		this.cwd = cwd;

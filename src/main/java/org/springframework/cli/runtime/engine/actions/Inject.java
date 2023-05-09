@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,41 @@
  * limitations under the License.
  */
 
-package org.springframework.cli.runtime.engine.frontmatter;
+package org.springframework.cli.runtime.engine.actions;
 
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import org.springframework.lang.Nullable;
+
 /**
  * @author Mark Pollack
  */
-public class InjectMavenDependency {
+public class Inject {
+
+	@Nullable
+	private final String before;
+
+	@Nullable
+	private final String after;
 
 	private final String to;
 
 	private final String skip;
+
+	private final String text;
+
+	@Nullable
+	public String getBefore() {
+		return before;
+	}
+
+	@Nullable
+	public String getAfter() {
+		return after;
+	}
 
 	public String getTo() {
 		return to;
@@ -38,19 +58,29 @@ public class InjectMavenDependency {
 		return skip;
 	}
 
+	public String getText() {
+		return text;
+	}
+
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	InjectMavenDependency(@JsonProperty("to") String to, @JsonProperty("skip") String skip) {
+	Inject(@JsonProperty("text") String text, @JsonProperty("to") String to,
+			@JsonProperty("skip") String skip, @JsonProperty("before") String before,
+			@JsonProperty("after") String after) {
+		this.text = text;
 		this.to = Objects.requireNonNull(to);
 		this.skip = Objects.requireNonNull(skip);
+		this.before = before;
+		this.after = after;
 	}
 
 	@Override
 	public String toString() {
-		final StringBuffer sb = new StringBuffer("InjectMavenDependency{");
-		sb.append("to='").append(to).append('\'');
-		sb.append(", skip='").append(skip).append('\'');
-		sb.append('}');
-		return sb.toString();
+		return "Inject{" +
+				"before='" + before + '\'' +
+				", after='" + after + '\'' +
+				", to='" + to + '\'' +
+				", skip='" + skip + '\'' +
+				", text='" + text + '\'' +
+				'}';
 	}
-
 }
