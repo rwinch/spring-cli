@@ -31,7 +31,7 @@ public class IntegrationTestSupport {
 	private static final Logger logger = LoggerFactory.getLogger(IntegrationTestSupport.class);
 
 
-	public static void initializeProject(Path projectPath, Path workingDirectory) {
+	public static void installInWorkingDirectory(Path projectPath, Path workingDirectory) {
 		try {
 			Resource projectResource = new FileSystemResource(projectPath.toString());
 			FileUtils.copyDirectory(projectResource.getFile(), workingDirectory.toFile());
@@ -40,4 +40,5 @@ public class IntegrationTestSupport {
 			throw new RuntimeException(ex);
 		}
 	}
+
 }

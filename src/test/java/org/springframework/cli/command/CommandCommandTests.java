@@ -18,6 +18,7 @@
 package org.springframework.cli.command;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,10 +28,11 @@ import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cli.command.BootCommandsTests.MockBaseConfig;
-import org.springframework.cli.command.BootCommandsTests.MockUserConfig;
+import org.springframework.cli.support.MockConfigurations.MockBaseConfig;
+import org.springframework.cli.support.MockConfigurations.MockUserConfig;
 import org.springframework.cli.runtime.command.AbstractCommandTests;
 import org.springframework.cli.runtime.engine.model.ModelPopulator;
+import org.springframework.cli.support.CommandRunner;
 import org.springframework.cli.support.IntegrationTestSupport;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,10 +45,27 @@ public class CommandCommandTests extends AbstractCommandTests {
 	@TempDir(cleanup = CleanupMode.NEVER)
 	Path workingDir;
 
+	void dsl(@TempDir(cleanup = CleanupMode.ON_SUCCESS) Path workingDir) {
+		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
+
+
+
+//			CommandRunner commandRunner = new CommandRunner.Builder(context)
+//					.prepareProject("rest-service", workingDir)
+//					.installCommandGroup("exec")
+//					.executeCommand("util/mkdir")
+//					.withArguments("directory-to-create", dir.toFile().getAbsolutePath())
+//					.build();
+//			commandRunner.run();
+
+
+		});
+	}
+
 	@Test
 	void testCommandNew() {
 		Path projectPath = Path.of("test-data").resolve("projects").resolve("rest-service");
-		IntegrationTestSupport.initializeProject(projectPath, workingDir);
+		IntegrationTestSupport.installInWorkingDirectory(projectPath, workingDir);
 		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
 			assertThat(context).hasSingleBean(CommandCommands.class);
 			CommandCommands commandCommands = context.getBean(CommandCommands.class);
@@ -58,14 +77,14 @@ public class CommandCommandTests extends AbstractCommandTests {
 			assertThat(helloWorldPath.resolve("command.yaml")).exists();
 			assertThat(helloWorldPath.resolve("hello.yaml")).exists();
 
-
-
 			Map<String, Object> model = new HashMap<>();
 			model.put("greeting", "world");
 			assertThat(workingDir.resolve("hello.txt")).doesNotExist();
 			Map<String, ModelPopulator> beansOfType = context.getBeansOfType(ModelPopulator.class);
 			runCommand("hello", "world", model, new ArrayList<>(beansOfType.values()), String.valueOf(workingDir));
 			assertThat(workingDir.resolve("hello.txt")).exists();
+			String platform = System.getProperty("os.name")  + ".";
+			assertThat(workingDir.resolve("hello.txt")).content().isEqualTo("Hello world on " + platform);
 		});
 	}
 }

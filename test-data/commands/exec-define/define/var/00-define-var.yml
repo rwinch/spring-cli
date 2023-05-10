@@ -1,0 +1,6 @@
+actions:
+  - exec:
+      command-file: echo-command.txt
+      define:
+        name: phone-type
+        jsonPath: $.phoneNumbers[:1].type
