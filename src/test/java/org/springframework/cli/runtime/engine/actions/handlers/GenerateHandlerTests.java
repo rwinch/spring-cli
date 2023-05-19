@@ -31,7 +31,6 @@ import org.springframework.cli.support.MockConfigurations.MockBaseConfig;
 import org.springframework.cli.support.MockConfigurations.MockUserConfig;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.contentOf;
 
 public class GenerateHandlerTests {
 
