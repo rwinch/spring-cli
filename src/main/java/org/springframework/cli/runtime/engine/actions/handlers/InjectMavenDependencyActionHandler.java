@@ -19,6 +19,7 @@ package org.springframework.cli.runtime.engine.actions.handlers;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -56,7 +57,7 @@ public class InjectMavenDependencyActionHandler {
 	public void execute(InjectMavenDependency injectMavenDependency) {
 
 		Path pomPath = cwd.resolve("pom.xml");
-		if (pomPath == null) {
+		if (Files.notExists(pomPath)) {
 			throw new SpringCliException("Could not find pom.xml in " + this.cwd + ".  Make sure you are running the command in the directory that contains a pom.xml file");
 		}
 		String text = injectMavenDependency.getText();
@@ -77,7 +78,7 @@ public class InjectMavenDependencyActionHandler {
 			try {
 				for (Result result : resultList) {
 					// write updated file.
-					try (BufferedWriter sourceFileWriter = Files.newBufferedWriter(pomPath)) {
+					try (BufferedWriter sourceFileWriter = Files.newBufferedWriter(pomPath, StandardCharsets.UTF_8)) {
 						sourceFileWriter.write(result.getAfter().printAllTrimmed());
 					}
 				}

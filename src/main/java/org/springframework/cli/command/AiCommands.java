@@ -15,17 +15,12 @@
  */
 
 
-package org.springframework.cli.command.ai;
+package org.springframework.cli.command;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
-
-import org.apache.commons.compress.utils.IOUtils;
+import java.nio.file.Path;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cli.SpringCliException;
+import org.springframework.cli.merger.ai.OpenAiHandler;
 import org.springframework.cli.util.TerminalMessage;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
@@ -42,31 +37,10 @@ public class AiCommands {
 	}
 
 	@ShellMethod(key = "ai add", value = "Add code to the project from AI for a Spring Project project.")
-	public void aiadd(
-			@ShellOption(help = "The name of the Spring Project project, e.g. JPA, Batch, etc.", defaultValue = ShellOption.NULL, arity = 1)String project) {
-
-		// get api token under ~/.openai
-		Properties properties = getPropertyFile();
-		String openAiApiKey = properties.getProperty("OPEN_AI_API_KEY");
-		terminalMessage.print("OpenAI key = " + openAiApiKey);
-
-
-
-	}
-
-	private static Properties getPropertyFile() {
-		File homeDir = new File(System.getProperty("user.home"));
-		File propertyFile = new File(homeDir, ".openai");
-		Properties props = new Properties();
-		FileInputStream in = null;
-		try {
-			in = new FileInputStream(propertyFile);
-			props.load(in);
-			return props;
-		} catch (IOException ex) {
-			throw new SpringCliException("Could not load property file ~/.openai", ex);
-		} finally {
-			IOUtils.closeQuietly(in);
-		}
+	public void aiAdd(
+			@ShellOption(help = "The name of the Spring Project project, e.g. JPA, Batch, etc.", defaultValue = ShellOption.NULL, arity = 1)String project,
+			@ShellOption(help = "Path to run the command in, most of the time this is not necessary to specify and the default value is the current working directory.", defaultValue = ShellOption.NULL, arity = 1) String path) {
+		OpenAiHandler openAiHandler = new OpenAiHandler();
+		openAiHandler.add(project, path, terminalMessage);
 	}
 }

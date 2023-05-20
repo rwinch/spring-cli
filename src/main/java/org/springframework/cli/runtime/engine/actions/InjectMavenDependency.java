@@ -30,7 +30,7 @@ public class InjectMavenDependency {
 	private String text;
 
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	InjectMavenDependency(@JsonProperty("text") String text) {
+	public InjectMavenDependency(@JsonProperty("text") String text) {
 		this.text = Objects.requireNonNull(text);
 	}
 

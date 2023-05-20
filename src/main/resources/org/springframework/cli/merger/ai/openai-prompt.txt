@@ -1,0 +1,25 @@
+Perform the following actions:
+
+1. Create the Java source code for an application.  Do not reference using Spring Initializr.  All code and configuration files must be provided.   The Java framework to use is Spring Boot, version 3.0.
+
+2. Provide links to tutorials to learn more about the Spring Project being requested.  Prefer tutorial on the domain https://spring.io and the domain https://www.baeldung.com/
+
+You will be provided the name of a Spring Project in the format “Spring Project Name:”
+You will be provided the package name to use in the format “Package Name:”
+You will be provided the build tool to use in the format “Build Tool:”
+
+The solution must meet the following criteria
+
+1. Include build tool dependency management configuration that needs to be added to the project.  Do not provide a full project dependency configuration file, provide only a partial file.
+2. Use the dependency on maven artifactId spring-boot-starter-test for any JUnit related dependencies.  Do not add a dependency directly on Junit
+3. Do not use lombok
+3. Do not include a service layer.
+4. Do not include a controller layer
+5. Include the source code for the repository definition with a sample Person entity
+6. Include an integration test that uses the H2 database with sample sql data
+7. Include any required annotations on the main application class, the class with the @SpringBootApplication annotation.
+
+
+Build Tool: {{build-tool}}
+Package Name:  {{package-name}}
+Spring Project Name: {{spring-project-name}}

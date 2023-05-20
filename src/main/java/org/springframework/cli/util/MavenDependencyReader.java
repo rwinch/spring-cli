@@ -41,8 +41,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.ls.DOMImplementationLS;
-import org.w3c.dom.ls.LSSerializer;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -84,12 +82,16 @@ public class MavenDependencyReader {
 		}
 	}
 
-	private List<String> parseDocument(Document document, List<String> dependencies) throws TransformerException {
+	/**
+	 * Reads the Document and populates the provided array with individual dependency
+	 * text values for each dependency element.
+	 * @param document The Document to parse
+	 * @param dependencies a list to populate with each dependency text
+	 * @throws TransformerException if the element can't be converted to text
+	 */
+	private void parseDocument(Document document, List<String> dependencies) throws TransformerException {
 		Element root = document.getDocumentElement();
 		NodeList nodeList = root.getElementsByTagName("dependency");
-
-		DOMImplementationLS ls = (DOMImplementationLS) document.getImplementation();
-		LSSerializer ser = ls.createLSSerializer();
 
 		TransformerFactory tf = TransformerFactory.newInstance();
 		Transformer transformer = tf.newTransformer();
@@ -105,7 +107,6 @@ public class MavenDependencyReader {
 				dependencies.add(xml);
 			}
 		}
-		return dependencies;
 	}
 
 	protected Document buildDocument(ErrorHandler handler, InputStream stream)
