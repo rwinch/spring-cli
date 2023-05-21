@@ -76,12 +76,6 @@ public class MockConfigurations {
 		}
 
 		@Bean
-		AiCommands aiCommands() {
-			AiCommands aiCommands = new AiCommands(TerminalMessage.noop());
-			return aiCommands;
-		}
-
-		@Bean
 		CommandCommands commandCommands(SourceRepositoryService sourceRepositoryService) {
 			return new CommandCommands(sourceRepositoryService, TerminalMessage.noop());
 		}

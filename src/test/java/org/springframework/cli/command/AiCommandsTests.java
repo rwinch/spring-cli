@@ -29,8 +29,7 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cli.support.CommandRunner;
 import org.springframework.cli.support.MockConfigurations.MockBaseConfig;
 import org.springframework.cli.support.MockConfigurations.MockUserConfig;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.springframework.cli.util.TerminalMessage;
 
 public class AiCommandsTests {
 
@@ -41,8 +40,9 @@ public class AiCommandsTests {
 	@DisabledOnOs(OS.WINDOWS)
 	void addJpa(@TempDir(cleanup = CleanupMode.ON_SUCCESS) Path workingDir) {
 		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
-			assertThat(context).hasSingleBean(AiCommands.class);
-			AiCommands aiCommands = context.getBean(AiCommands.class);
+
+			StubOpenAiHandler stubOpenAiHandler = new StubOpenAiHandler();
+			AiCommands aiCommands = new AiCommands(stubOpenAiHandler, TerminalMessage.noop());
 
 			CommandRunner commandRunner = new CommandRunner.Builder(context)
 					.prepareProject("rest-service", workingDir)
@@ -50,6 +50,7 @@ public class AiCommandsTests {
 			commandRunner.run();
 
 			aiCommands.aiAdd("jpa", workingDir.toAbsolutePath().toString());
+
 
 		});
 	}

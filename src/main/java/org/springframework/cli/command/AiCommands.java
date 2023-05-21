@@ -31,16 +31,23 @@ public class AiCommands {
 
 	private final TerminalMessage terminalMessage;
 
+	private OpenAiHandler openAiHandler = new OpenAiHandler();
+
 	@Autowired
 	public AiCommands(TerminalMessage terminalMessage) {
 		this.terminalMessage = terminalMessage;
+	}
+
+	public AiCommands(OpenAiHandler openAiHandler, TerminalMessage terminalMessage) {
+		this.terminalMessage = terminalMessage;
+		this.openAiHandler = openAiHandler;
 	}
 
 	@ShellMethod(key = "ai add", value = "Add code to the project from AI for a Spring Project project.")
 	public void aiAdd(
 			@ShellOption(help = "The name of the Spring Project project, e.g. JPA, Batch, etc.", defaultValue = ShellOption.NULL, arity = 1)String project,
 			@ShellOption(help = "Path to run the command in, most of the time this is not necessary to specify and the default value is the current working directory.", defaultValue = ShellOption.NULL, arity = 1) String path) {
-		OpenAiHandler openAiHandler = new OpenAiHandler();
-		openAiHandler.add(project, path, terminalMessage);
+
+		this.openAiHandler.add(project, path, terminalMessage);
 	}
 }

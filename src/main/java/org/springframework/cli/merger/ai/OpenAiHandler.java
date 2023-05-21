@@ -53,7 +53,13 @@ public class OpenAiHandler implements AiHandler {
 
 	public void add(String project, String path, TerminalMessage terminalMessage) {
 		ProjectName projectName = deriveProjectName(project);
-		Path projectPath = IoUtils.getProjectPath(path);
+		Path projectPath;
+		if (path == null) {
+			projectPath = IoUtils.getWorkingDirectory();
+		} else {
+			projectPath = IoUtils.getProjectPath(path);
+		}
+		System.out.println("project path to use is : " + projectPath);
 		Map<String, String> context = getContext(projectName, projectPath);
 		String prompt = createPrompt(context);
 		String response = generate(prompt);
@@ -161,8 +167,10 @@ public class OpenAiHandler implements AiHandler {
 	}
 
 	private void writeTestCode(ProjectArtifact projectArtifact, ProjectName projectName, Path projectPath) throws IOException {
+		// TODO paramaterize better to reduce code duplication
 		String packageName = calculatePackage(projectName, projectPath);
-		String className = ClassNameExtractor.extractClassName(projectArtifact.getText());
+		ClassNameExtractor classNameExtractor = new ClassNameExtractor();
+		String className = classNameExtractor.extractClassName(projectArtifact.getText());
 		Path output = createTestFile(projectPath, packageName, className + ".java");
 		Files.createDirectories(output.getParent());
 		try (Writer writer = new BufferedWriter(new FileWriter(output.toFile()))) {
@@ -172,7 +180,8 @@ public class OpenAiHandler implements AiHandler {
 
 	private void writeSourceCode(ProjectArtifact projectArtifact, ProjectName projectName, Path projectPath) throws IOException {
 		String packageName = calculatePackage(projectName, projectPath);
-		String className = ClassNameExtractor.extractClassName(projectArtifact.getText());
+		ClassNameExtractor classNameExtractor = new ClassNameExtractor();
+		String className = classNameExtractor.extractClassName(projectArtifact.getText());
 		Path output = createSourceFile(projectPath, packageName, className + ".java");
 		Files.createDirectories(output.getParent());
 		try (Writer writer = new BufferedWriter(new FileWriter(output.toFile()))) {

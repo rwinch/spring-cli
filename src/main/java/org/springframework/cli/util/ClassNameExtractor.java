@@ -17,6 +17,8 @@
 
 package org.springframework.cli.util;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,20 +26,27 @@ import org.springframework.cli.SpringCliException;
 
 public class ClassNameExtractor {
 
+	private String[] patternStrings = {
+			"(?<=\\bclass\\s)\\w+",
+			"(?<=\\binterface\\s)\\w+",
+			"(?<=\\b@interface\\s)\\w+",
+			"(?<=\\benum\\s)\\w+"
+	};
 
-	public static String extractClassName(String code) {
-		String pattern = "(?<=\\bclass\\s)\\w+";
-		Pattern classPattern = Pattern.compile(pattern);
-		Matcher matcher = classPattern.matcher(code);
-		if (matcher.find()) {
-			return matcher.group();
+	private List<Pattern> patterns = new ArrayList<>();
+
+	public ClassNameExtractor() {
+		for (String patternString : patternStrings) {
+			patterns.add(Pattern.compile(patternString));
 		}
-		// Try interface
-		pattern = "(?<=\\binterface\\s)\\w+";
-		classPattern = Pattern.compile(pattern);
-		matcher = classPattern.matcher(code);
-		if (matcher.find()) {
-			return matcher.group();
+	}
+
+	public String extractClassName(String code) {
+		for (Pattern pattern : patterns) {
+			Matcher matcher = pattern.matcher(code);
+			if (matcher.find()) {
+				return matcher.group();
+			}
 		}
 		throw new SpringCliException("Can not extract class name or interface name from code: " + code);
 	}
