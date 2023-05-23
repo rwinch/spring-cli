@@ -45,9 +45,9 @@ public class AiCommands {
 
 	@ShellMethod(key = "ai add", value = "Add code to the project from AI for a Spring Project project.")
 	public void aiAdd(
-			@ShellOption(help = "The name of the Spring Project project, e.g. JPA, Batch, etc.", defaultValue = ShellOption.NULL, arity = 1)String project,
+			@ShellOption(help = "The description of the code to create, this can be as short as a well known Spring project name, e.g JPA.", defaultValue = ShellOption.NULL, arity = 1)String description,
 			@ShellOption(help = "Path to run the command in, most of the time this is not necessary to specify and the default value is the current working directory.", defaultValue = ShellOption.NULL, arity = 1) String path) {
 
-		this.openAiHandler.add(project, path, terminalMessage);
+		this.openAiHandler.add(description, path, terminalMessage);
 	}
 }

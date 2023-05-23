@@ -58,7 +58,7 @@ public class MarkdownResponseVisitor extends AbstractVisitor {
 
 		// Check that we processed all fenced code blocks
 		if (this.projectArtifacts.size() == projectArtifactCountBefore) {
-			throw new SpringCliException("Could not classify FencedCodeBlock with info,code = " + info + ", " + code);
+			System.out.println("Could not classify FencedCodeBlock with info,code = " + info + "\n" + code);
 		}
 	}
 

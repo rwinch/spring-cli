@@ -1,4 +1,4 @@
-package org.springframework.cli.merger.ai;/*
+/*
  * Copyright 2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,33 @@ package org.springframework.cli.merger.ai;/*
  * limitations under the License.
  */
 
-public interface AiHandler {
 
-	String generate(PromptRequest prompt);
+package org.springframework.cli.merger.ai;
+
+public class PromptRequest {
+
+	private String systemPrompt;
+
+	private String userPrompt;
+
+	public PromptRequest(String systemPrompt, String userPrompt) {
+		this.systemPrompt = systemPrompt;
+		this.userPrompt = userPrompt;
+	}
+
+	public String getSystemPrompt() {
+		return systemPrompt;
+	}
+
+	public String getUserPrompt() {
+		return userPrompt;
+	}
+
+	@Override
+	public String toString() {
+		return "PromptRequest{" +
+				"systemPrompt='" + systemPrompt + '\'' +
+				", userPrompt='" + userPrompt + '\'' +
+				'}';
+	}
 }

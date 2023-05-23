@@ -18,28 +18,28 @@
 package org.springframework.cli.merger.ai;
 
 public class ProjectName {
-	private final String shortName;
+	private final String shortPackageName;
 
-	private final String projectName;
+	private final String springProjectName;
 
-	public ProjectName(String shortName, String projectName) {
-		this.shortName = shortName;
-		this.projectName = projectName;
+	public ProjectName(String shortName, String springProjectName) {
+		this.shortPackageName = shortName;
+		this.springProjectName = springProjectName;
 	}
 
-	public String getShortName() {
-		return shortName;
+	public String getShortPackageName() {
+		return shortPackageName;
 	}
 
-	public String getProjectName() {
-		return projectName;
+	public String getSpringProjectName() {
+		return springProjectName;
 	}
 
 	@Override
 	public String toString() {
 		return "ProjectName{" +
-				"shortName='" + shortName + '\'' +
-				", projectName='" + projectName + '\'' +
+				"shortPackageName='" + shortPackageName + '\'' +
+				", springProjectName='" + springProjectName + '\'' +
 				'}';
 	}
 }

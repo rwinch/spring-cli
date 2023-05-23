@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import org.springframework.cli.merger.ai.OpenAiHandler;
 import org.springframework.cli.merger.ai.OpenAiHandlerTests;
+import org.springframework.cli.merger.ai.PromptRequest;
 import org.springframework.cli.testutil.TestResourceUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StreamUtils;
@@ -30,7 +31,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class StubOpenAiHandler extends OpenAiHandler {
 
 	@Override
-	public String generate(String prompt)  {
+	public String generate(PromptRequest prompt)  {
 		try {
 			ClassPathResource classPathResource = TestResourceUtils.qualifiedResource(OpenAiHandlerTests.class, "response.md");
 			String response = StreamUtils.copyToString(classPathResource.getInputStream(), UTF_8);
