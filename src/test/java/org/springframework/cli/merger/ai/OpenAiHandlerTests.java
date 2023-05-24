@@ -38,6 +38,6 @@ public class OpenAiHandlerTests {
 		assertThat(response).isNotNull();
 
 		List<ProjectArtifact> projectArtifacts = openAiHandler.createProjectArtifacts(response);
-		assertThat(projectArtifacts).hasSize(4);
+		assertThat(projectArtifacts).hasSize(5);
 	}
 }

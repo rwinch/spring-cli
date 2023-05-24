@@ -37,10 +37,8 @@ public class MarkdownResponseVisitor extends AbstractVisitor {
 
 	@Override
 	public void visit(FencedCodeBlock fencedCodeBlock) {
-		super.visit(fencedCodeBlock);
 		String info = fencedCodeBlock.getInfo();
 		String code = fencedCodeBlock.getLiteral();
-		int projectArtifactCountBefore = projectArtifacts.size();
 		if (info.equalsIgnoreCase("java")) {
 			addJavaCode(code);
 		}
@@ -56,23 +54,26 @@ public class MarkdownResponseVisitor extends AbstractVisitor {
 			}
 		}
 
-		// Check that we processed all fenced code blocks
-		if (this.projectArtifacts.size() == projectArtifactCountBefore) {
-			System.out.println("Could not classify FencedCodeBlock with info,code = " + info + "\n" + code);
-		}
 	}
 
 	private void addMavenDependencies(String code) {
-		this.projectArtifacts.add(new ProjectArtifact(ProjectArtifactType.MAVEN_DEPENDENCIES, code));
+		addIfNotPresent(new ProjectArtifact(ProjectArtifactType.MAVEN_DEPENDENCIES, code));
 	}
 
 	private void addJavaCode(String code) {
-		if (code.contains("@SpringBootApplication")) {
-			this.projectArtifacts.add(new ProjectArtifact(ProjectArtifactType.MAIN_CLASS, code));
+		if (code.contains("@SpringBootApplication") && code.contains("SpringApplication.run")) {
+			addIfNotPresent(new ProjectArtifact(ProjectArtifactType.MAIN_CLASS, code));
 		} else if (code.contains("@Test")) {
-			this.projectArtifacts.add(new ProjectArtifact(ProjectArtifactType.TEST_CODE, code));
+			addIfNotPresent(new ProjectArtifact(ProjectArtifactType.TEST_CODE, code));
 		} else {
-			this.projectArtifacts.add(new ProjectArtifact(ProjectArtifactType.SOURCE_CODE, code));
+			addIfNotPresent(new ProjectArtifact(ProjectArtifactType.SOURCE_CODE, code));
+		}
+	}
+
+	private void addIfNotPresent(ProjectArtifact projectArtifact) {
+		// TODO - investigate why Node has duplicate entries
+		if (!this.projectArtifacts.contains(projectArtifact)) {
+			this.projectArtifacts.add(projectArtifact);
 		}
 	}
 

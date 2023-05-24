@@ -19,6 +19,7 @@ package org.springframework.cli.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,13 +42,13 @@ public class ClassNameExtractor {
 		}
 	}
 
-	public String extractClassName(String code) {
+	public Optional<String> extractClassName(String code) {
 		for (Pattern pattern : patterns) {
 			Matcher matcher = pattern.matcher(code);
 			if (matcher.find()) {
-				return matcher.group();
+				return Optional.of(matcher.group());
 			}
 		}
-		throw new SpringCliException("Can not extract class name or interface name from code: " + code);
+		return Optional.empty();
 	}
 }

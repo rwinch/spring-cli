@@ -49,7 +49,8 @@ public class AiCommandsTests {
 					.build();
 			commandRunner.run();
 
-			aiCommands.aiAdd("jpa", workingDir.toAbsolutePath().toString());
+			//TODO this takes a while, need to move to integration test
+			//aiCommands.aiAdd("jpa", workingDir.toAbsolutePath().toString(), true);
 
 
 		});

@@ -21,11 +21,15 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
@@ -58,7 +62,7 @@ public class OpenAiHandler implements AiHandler {
 
 	private final HandlebarsTemplateEngine handlebarsTemplateEngine = new HandlebarsTemplateEngine();
 
-	public void add(String description, String path, TerminalMessage terminalMessage) {
+	public void add(String description, String path, boolean preview, TerminalMessage terminalMessage) {
 		Path projectPath = getProjectPath(path);
 
 		ProjectNameHeuristic projectNameHeuristic = new ProjectNameHeuristic();
@@ -72,12 +76,34 @@ public class OpenAiHandler implements AiHandler {
 		String response = generate(promptRequest);
 		terminalMessage.print("Done.");
 
-		String modifiedResponse = modifyResponse(response);
+		String modifiedResponse = modifyResponse(response, description);
 		writeReadMe(projectName, modifiedResponse, projectPath, terminalMessage);
-
-		List<ProjectArtifact> projectArtifacts = createProjectArtifacts(modifiedResponse);
-		processArtifacts(projectArtifacts, projectName, projectPath, context, terminalMessage);
+		if (!preview) {
+			List<ProjectArtifact> projectArtifacts = createProjectArtifacts(modifiedResponse);
+			processArtifacts(projectArtifacts, projectPath, terminalMessage);
+		}
 	}
+
+	public void apply(String file, String path, TerminalMessage terminalMessage) {
+		Path projectPath = getProjectPath(path);
+		Path readmePath = projectPath.resolve(file);
+		if (Files.notExists(readmePath)) {
+			throw new SpringCliException("Could not find file " + file);
+		}
+		if (!Files.isRegularFile(readmePath)) {
+			throw new SpringCliException("The Path " + readmePath + " is not a regular file, can't read");
+		}
+		try (InputStream stream = Files.newInputStream(readmePath)) {
+			String response = StreamUtils.copyToString(stream, UTF_8);
+			String modifiedResponse = modifyResponse(response, response);
+			List<ProjectArtifact> projectArtifacts = createProjectArtifacts(modifiedResponse);
+			processArtifacts(projectArtifacts, projectPath, terminalMessage);
+		} catch (IOException ex) {
+			throw new SpringCliException("Could not read file " + readmePath.toAbsolutePath(), ex);
+		}
+
+	}
+
 
 	private void writeReadMe(ProjectName projectName, String text, Path projectPath, TerminalMessage terminalMessage) {
 		Path output = projectPath.resolve("README-ai-" + projectName.getShortPackageName() + ".md");
@@ -99,9 +125,22 @@ public class OpenAiHandler implements AiHandler {
 				projectName.getShortPackageName() + ".md for a description of the code that was added.");
 	}
 
-	private String modifyResponse(String response) {
-		String code = "*Note: The code provided is just an example and may not be suitable for production use.*\n\n" + response;
+	private String modifyResponse(String response, String description) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("*Note: The code provided is just an example and may not be suitable for production use.*");
+		sb.append(System.lineSeparator());
+		sb.append(System.lineSeparator());
+		DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM);
+		sb.append("Generated on " + LocalDateTime.now().format(formatter));
+		sb.append(System.lineSeparator());
+		sb.append(System.lineSeparator());
+		sb.append("Generated using the description: " + description);
+		sb.append(System.lineSeparator());
+		sb.append(System.lineSeparator());
+		sb.append(response);
+		String code = sb.toString();
 
+		// TODO - determine if Java 17
 		if (!code.contains("import javax")) {
 			return code;
 		}
@@ -132,7 +171,7 @@ public class OpenAiHandler implements AiHandler {
 		ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest
 				.builder()
 				.model("gpt-3.5-turbo")
-				.temperature(0.8)
+				.temperature(0.3)
 				.messages(
 						List.of(
 								new ChatMessage("system", promptRequest.getSystemPrompt()),
@@ -158,8 +197,8 @@ public class OpenAiHandler implements AiHandler {
 		return context;
 	}
 
-	private String calculatePackageForArtifact(ProjectArtifact projectArtifact, String defaultPackage) {
-		String packageToUse = defaultPackage;
+	private String calculatePackageForArtifact(ProjectArtifact projectArtifact) {
+		String packageToUse = "com.example.ai";
 		try (BufferedReader reader = new BufferedReader(new StringReader(projectArtifact.getText()))) {
 			String firstLine = reader.readLine();
 			if (firstLine.contains("package")) {
@@ -220,19 +259,19 @@ public class OpenAiHandler implements AiHandler {
 		}
 	}
 
-	private void processArtifacts(List<ProjectArtifact> projectArtifacts, ProjectName projectName, Path projectPath, Map<String, String> context, TerminalMessage terminalMessage) {
+	private void processArtifacts(List<ProjectArtifact> projectArtifacts, Path projectPath, TerminalMessage terminalMessage) {
 		for (ProjectArtifact projectArtifact : projectArtifacts) {
 			try {
 				ProjectArtifactType artifactType = projectArtifact.getArtifactType();
 				switch (artifactType) {
 					case SOURCE_CODE:
-						writeSourceCode(projectArtifact, projectName, context, projectPath);
+						writeSourceCode(projectArtifact, projectPath);
 						break;
 					case TEST_CODE:
-						writeTestCode(projectArtifact, projectName, context, projectPath);
+						writeTestCode(projectArtifact, projectPath);
 						break;
 					case MAVEN_DEPENDENCIES:
-						writeMavenDependencies(projectArtifact, projectName, projectPath, terminalMessage);
+						writeMavenDependencies(projectArtifact, projectPath, terminalMessage);
 						break;
 					case APPLICATION_PROPERTIES:
 						break;
@@ -243,38 +282,42 @@ public class OpenAiHandler implements AiHandler {
 				}
 			}
 			catch (IOException ex) {
+				System.err.println(ex);
+				ex.printStackTrace();
 				throw new SpringCliException("Could not write project artifact.", ex);
 			}
 		}
 	}
 
-	private void writeMavenDependencies(ProjectArtifact projectArtifact, ProjectName projectName, Path projectPath, TerminalMessage terminalMessage) {
+	private void writeMavenDependencies(ProjectArtifact projectArtifact, Path projectPath, TerminalMessage terminalMessage) {
 		InjectMavenDependencyActionHandler injectMavenDependencyActionHandler =
 				new InjectMavenDependencyActionHandler(projectPath, terminalMessage);
 		InjectMavenDependency injectMavenDependency = new InjectMavenDependency(projectArtifact.getText());
 		injectMavenDependencyActionHandler.execute(injectMavenDependency);
 	}
 
-	private void writeTestCode(ProjectArtifact projectArtifact, ProjectName projectName, Map<String, String> context, Path projectPath) throws IOException {
-		// TODO paramaterize better to reduce code duplication
-		String packageName = this.calculatePackageForArtifact(projectArtifact, context.get("package-name"));
+	private void writeTestCode(ProjectArtifact projectArtifact, Path projectPath) throws IOException {
+		// TODO parameterize better to reduce code duplication
+		String packageName = this.calculatePackageForArtifact(projectArtifact);
 		ClassNameExtractor classNameExtractor = new ClassNameExtractor();
-		String className = classNameExtractor.extractClassName(projectArtifact.getText());
-		Path output = createTestFile(projectPath, packageName, className + ".java");
-		Files.createDirectories(output.getParent());
-		try (Writer writer = new BufferedWriter(new FileWriter(output.toFile()))) {
-			writer.write(projectArtifact.getText());
+		Optional<String> className = classNameExtractor.extractClassName(projectArtifact.getText());
+		if (className.isPresent()) {
+			Path output = createTestFile(projectPath, packageName, className.get() + ".java");
+			try (Writer writer = new BufferedWriter(new FileWriter(output.toFile()))) {
+				writer.write(projectArtifact.getText());
+			}
 		}
 	}
 
-	private void writeSourceCode(ProjectArtifact projectArtifact, ProjectName projectName, Map<String, String> context, Path projectPath) throws IOException {
-		String packageName = this.calculatePackageForArtifact(projectArtifact, context.get("package-name"));
+	private void writeSourceCode(ProjectArtifact projectArtifact, Path projectPath) throws IOException {
+		String packageName = this.calculatePackageForArtifact(projectArtifact);
 		ClassNameExtractor classNameExtractor = new ClassNameExtractor();
-		String className = classNameExtractor.extractClassName(projectArtifact.getText());
-		Path output = createSourceFile(projectPath, packageName, className + ".java");
-		Files.createDirectories(output.getParent());
-		try (Writer writer = new BufferedWriter(new FileWriter(output.toFile()))) {
-			writer.write(projectArtifact.getText());
+		Optional<String> className = classNameExtractor.extractClassName(projectArtifact.getText());
+		if (className.isPresent()) {
+			Path output = createSourceFile(projectPath, packageName, className.get() + ".java");
+			try (Writer writer = new BufferedWriter(new FileWriter(output.toFile()))) {
+				writer.write(projectArtifact.getText());
+			}
 		}
 	}
 
@@ -305,8 +348,15 @@ public class OpenAiHandler implements AiHandler {
 	}
 
 	private void createFile(Path file) throws IOException {
+		if (Files.exists(file)) {
+			//System.out.println("deleting file " + file.toAbsolutePath());
+			Files.delete(file);
+		}
 		Files.createDirectories(file.getParent());
-		Files.createFile(file);
+		if (Files.notExists(file)) {
+			Files.createFile(file);
+		}
 	}
+
 
 }

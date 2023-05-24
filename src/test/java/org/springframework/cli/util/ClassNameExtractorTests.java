@@ -29,7 +29,7 @@ class ClassNameExtractorTests {
 				"}\n";
 
 		ClassNameExtractor classNameExtractor = new ClassNameExtractor();
-		String className = classNameExtractor.extractClassName(fileContent);
+		String className = classNameExtractor.extractClassName(fileContent).get();
 
 		assertThat(className).isEqualTo("MyClass");
 
@@ -41,7 +41,7 @@ class ClassNameExtractorTests {
 				+ "\n"
 				+ "}";
 
-		String interfaceName = classNameExtractor.extractClassName(fileContent);
+		String interfaceName = classNameExtractor.extractClassName(fileContent).get();
 		assertThat(interfaceName).isEqualTo("PersonRepository");
 	}
 }
