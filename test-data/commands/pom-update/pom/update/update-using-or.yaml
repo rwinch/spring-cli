@@ -1,0 +1,7 @@
+actions:
+  - pom-update:
+      project-name: "{{name}}"
+      project-version: "{{version}}"
+      project-description: "{{description}}"
+
+# spring pom update --name myproject --version 1.0.0.RELEASE --description "Cool stuff!"

@@ -1,0 +1,20 @@
+command:
+  description: Update the pom
+  options:
+    #
+    - name: name
+      description: name of the project
+      dataType: string
+      defaultValue: NAME
+      inputType: text     # TEXT
+    - name: version
+      description: version of the project
+      dataType: string
+      defaultValue: VERSION
+      inputType: text     # TEXT
+    - name: description
+      description: description of the project
+      dataType: string
+      defaultValue: DESCRIPTION
+      inputType: text     # TEXT
+  

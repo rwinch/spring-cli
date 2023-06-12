@@ -47,10 +47,14 @@ import org.springframework.cli.runtime.engine.actions.Exec;
 import org.springframework.cli.runtime.engine.actions.Generate;
 import org.springframework.cli.runtime.engine.actions.Inject;
 import org.springframework.cli.runtime.engine.actions.InjectMavenDependency;
+import org.springframework.cli.runtime.engine.actions.PomUpdate;
+import org.springframework.cli.runtime.engine.actions.Replace;
 import org.springframework.cli.runtime.engine.actions.handlers.ExecActionHandler;
 import org.springframework.cli.runtime.engine.actions.handlers.GenerateActionHandler;
 import org.springframework.cli.runtime.engine.actions.handlers.InjectActionHandler;
 import org.springframework.cli.runtime.engine.actions.handlers.InjectMavenDependencyActionHandler;
+import org.springframework.cli.runtime.engine.actions.handlers.PomUpdateActionHandler;
+import org.springframework.cli.runtime.engine.actions.handlers.ReplaceActionHandler;
 import org.springframework.cli.runtime.engine.model.ModelPopulator;
 import org.springframework.cli.runtime.engine.templating.HandlebarsTemplateEngine;
 import org.springframework.cli.runtime.engine.templating.TemplateEngine;
@@ -175,6 +179,18 @@ public class DynamicCommand {
 				if (inject != null) {
 					InjectActionHandler injectActionHandler = new InjectActionHandler(templateEngine, model, cwd, terminalMessage);
 					injectActionHandler.execute(inject);
+				}
+
+				Replace replace = action.getReplace();
+				if (replace != null) {
+					ReplaceActionHandler replaceActionHandler = new ReplaceActionHandler(templateEngine, model, cwd, terminalMessage);
+					replaceActionHandler.execute(replace);
+				}
+
+				PomUpdate pomUpdate = action.getPomUpdate();
+				if (pomUpdate != null) {
+					PomUpdateActionHandler pomUpdateActionHandler = new PomUpdateActionHandler(templateEngine, model, cwd, terminalMessage);
+					pomUpdateActionHandler.execute(pomUpdate);
 				}
 
 				InjectMavenDependency injectMavenDependency = action.getInjectMavenDependency();

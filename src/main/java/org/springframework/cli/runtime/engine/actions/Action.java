@@ -18,6 +18,7 @@ package org.springframework.cli.runtime.engine.actions;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Null;
 
 import org.springframework.lang.Nullable;
 
@@ -49,6 +50,12 @@ public class Action {
 	//		expected that we will migrate this functionality to be based on open-rewrite
 
 	@Nullable
+	private final Replace replace;
+
+	@Nullable
+	private final PomUpdate pomUpdate;
+
+	@Nullable
 	private final InjectMavenPlugin injectMavenPlugin;
 
 	@Nullable
@@ -63,13 +70,17 @@ public class Action {
 			@JsonProperty("inject-maven-plugin") @Nullable InjectMavenPlugin injectMavenPlugin,
 			@JsonProperty("inject-maven-dependency") @Nullable InjectMavenDependency injectMavenDependency,
 			@JsonProperty("inject-properties") @Nullable InjectProperties injectProperties,
-			@JsonProperty("inject") @Nullable Inject inject) {
+			@JsonProperty("inject") @Nullable Inject inject,
+			@JsonProperty("replace") @Nullable Replace replace,
+			@JsonProperty("pom-update") @Nullable PomUpdate pomUpdate) {
 		this.generate = generate;
 		this.exec = exec;
 		this.injectMavenPlugin = injectMavenPlugin;
 		this.injectMavenDependency = injectMavenDependency;
 		this.injectProperties = injectProperties;
 		this.inject = inject;
+		this.replace = replace;
+		this.pomUpdate = pomUpdate;
 	}
 
 	@Nullable
@@ -102,12 +113,24 @@ public class Action {
 		return inject;
 	}
 
+	@Nullable
+	public Replace getReplace() {
+		return replace;
+	}
+
+	@Nullable
+	public PomUpdate getPomUpdate() {
+		return pomUpdate;
+	}
+
 	@Override
 	public String toString() {
 		return "Action{" +
 				"generate=" + generate +
 				", inject=" + inject +
 				", exec=" + exec +
+				", replace=" + replace +
+				", pomUpdate=" + pomUpdate +
 				", injectMavenPlugin=" + injectMavenPlugin +
 				", injectMavenDependency=" + injectMavenDependency +
 				", injectProperties=" + injectProperties +

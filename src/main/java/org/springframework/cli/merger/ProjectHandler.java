@@ -35,6 +35,7 @@ import org.springframework.cli.recipe.RecipeUtils;
 import org.springframework.cli.support.configfile.YamlConfigFile;
 import org.springframework.cli.util.IoUtils;
 import org.springframework.cli.util.PackageNameUtils;
+import org.springframework.cli.util.PomUpdateUtils;
 import org.springframework.cli.util.ProjectInfo;
 import org.springframework.cli.util.RefactorUtils;
 import org.springframework.cli.util.RootPackageFinder;
@@ -241,7 +242,8 @@ public class ProjectHandler {
 
 
 		// Update GroupId, ArtfiactId, Version, name, Description as needed.
-		updatePom(repositoryContentsPath, projectInfo);
+		PomUpdateUtils pomUpdateUtils = new PomUpdateUtils();
+		pomUpdateUtils.updatePom(repositoryContentsPath, projectInfo);
 
 
 		// Copy files
@@ -279,26 +281,6 @@ public class ProjectHandler {
 		sb.style(sb.style().foreground(AttributedStyle.WHITE));
 		sb.append("project in directory '" + toDir.getName() + "'");
 		terminalMessage.print(sb.toAttributedString());
-
-	}
-
-	private void updatePom(Path repositoryContentsPath, ProjectInfo projectInfo) {
-		// Get Files
-		List<Path> paths = new ArrayList<>();
-		Path pomPath = repositoryContentsPath.resolve("pom.xml");
-		paths.add(pomPath);
-		XmlParser xmlParser = new XmlParser();
-		Consumer<Throwable> onError = e -> {
-			logger.error("error in xml parser execution", e);
-		};
-		List<Document> documentList = xmlParser.parse(paths, repositoryContentsPath, new InMemoryExecutionContext(onError));
-
-		// Execute Recipe
-		ChangeNewlyClonedPomRecipe changeNewlyClonedPomRecipe = new ChangeNewlyClonedPomRecipe(projectInfo);
-		List<Result> resultList = changeNewlyClonedPomRecipe.run(documentList).getResults();
-
-		// Write Results
-		RecipeUtils.writeResults("ChangeNewlyClonedPomRecipe", pomPath, resultList);
 
 	}
 

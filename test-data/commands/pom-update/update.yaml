@@ -1,0 +1,18 @@
+#actions:
+#  - replace:
+#      path: pom.xml
+#      regex: <name>(.*?)</name>
+#      first-occurance: true
+#      value: "{{name}}"
+#  - replace:
+#      path: pom.xml
+#      regex: <version>(.*?)</version>
+#      first-occurance: true
+#      value: "{{version}}"
+#  - replace:
+#      path: pom.xml
+#      regex: <description>(.*?)</description>
+#      first-occurance: true
+#      value: "{{description}}"
+
+# spring pom update --name myproject --version 1.0.0.RELEASE --description "Cool stuff!"
