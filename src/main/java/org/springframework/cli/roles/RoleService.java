@@ -15,14 +15,13 @@
  */
 
 
-package org.springframework.cli.profile;
+package org.springframework.cli.roles;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -35,16 +34,13 @@ import org.yaml.snakeyaml.Yaml;
 
 import org.springframework.beans.factory.config.YamlMapFactoryBean;
 import org.springframework.beans.factory.config.YamlProcessor.ResolutionMethod;
-import org.springframework.boot.env.YamlPropertySourceLoader;
 import org.springframework.cli.SpringCliException;
-import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.util.StringUtils;
 
-public class ProfileService {
+public class RoleService {
 
-	public static String PROFILE_PATH = ".spring/profiles";
+	public static String ROLES_PATH = ".spring/roles";
 
 	public Map<String, Object> loadAsMap(String name) {
 		YamlMapFactoryBean factory = new YamlMapFactoryBean();
@@ -54,8 +50,22 @@ public class ProfileService {
 		return map;
 	}
 
-	public void updateProfile(String profileName, String key, Object value) {
-		Map<String, Object> map = loadAsMap(profileName);
+	public void updateRole(String roleName, String key, Object value) {
+		createRolesDirectoryIfNecessary();
+
+		// The default role is always updatable, create on demand.
+		if (! StringUtils.hasText(roleName)) {
+			File roleFile = getFile(roleName);
+			if (!roleFile.exists()) {
+				try {
+					roleFile.createNewFile();
+				} catch (IOException ex) {
+					throw new SpringCliException("Can not create role file for default role.  Message = " + ex.getMessage(), ex);
+				}
+			}
+
+		}
+		Map<String, Object> map = loadAsMap(roleName);
 		Object valueToUse = inferType(value);
 		map.put(key, valueToUse);
 
@@ -64,12 +74,12 @@ public class ProfileService {
 		dumperOptions.setPrettyFlow(true);
 		dumperOptions.setLineBreak(DumperOptions.LineBreak.getPlatformLineBreak());
 		Yaml yaml = new Yaml(dumperOptions);
-		File profileFile = getFile(profileName);
+		File getRoleFile = getFile(roleName);
 		try {
-			yaml.dump(map, new PrintWriter(profileFile));
+			yaml.dump(map, new PrintWriter(getRoleFile));
 		}
 		catch (FileNotFoundException e) {
-			throw new SpringCliException("The YAML file for the profile '" + profileName
+			throw new SpringCliException("The file for the role '" + roleName
 					+ "' was not found.  Error = " + e.getMessage());
 		}
 
@@ -84,42 +94,43 @@ public class ProfileService {
 		}
 	}
 
-	public List<String> getProfileNames(File directory) {
-		List<String> profileNames = new ArrayList<>();
+	public List<String> getRoleNames(File directory) {
+		List<String> roleNames = new ArrayList<>();
 		if (directory.exists() && directory.isDirectory()) {
 			File[] files = directory.listFiles();
-			Pattern pattern = Pattern.compile("cli-(.*?)\\.(yml|yaml)");
+			Pattern pattern = Pattern.compile("vars-(.*?)\\.(yml|yaml)");
 			if (files != null) {
 				for (File file : files) {
 					if (file.isFile()) {
 						String filename = file.getName();
 						Matcher matcher = pattern.matcher(filename);
 						if (matcher.matches()) {
-							String profileName = matcher.group(1);
-							profileNames.add(profileName);
+							String roleName = matcher.group(1);
+							roleNames.add(roleName);
 						}
 					}
 				}
 			}
 		}
-		return profileNames;
+		return roleNames;
 	}
 
-	public void createProfileDirectoryIfNecessary() {
-		File directory = new File(PROFILE_PATH);
+	public void createRolesDirectoryIfNecessary() {
+		File directory = new File(ROLES_PATH);
 		if (!directory.exists()) {
 			directory.mkdirs();
 		}
 	}
 
 	public File getFile(String name) {
+		createRolesDirectoryIfNecessary();
 		String fileName;
 		if (StringUtils.hasText(name)) {
-			fileName = "cli-" + name + ".yml";
+			fileName = "vars-" + name + ".yml";
 		} else {
-			fileName = "cli.yml";
+			fileName = "vars.yml";
 		}
-		String filePath = PROFILE_PATH + File.separator + fileName;
+		String filePath = ROLES_PATH + File.separator + fileName;
 		File propertiesFile = new File(filePath);
 		return propertiesFile;
 	}

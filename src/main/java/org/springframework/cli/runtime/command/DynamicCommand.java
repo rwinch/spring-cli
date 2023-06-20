@@ -18,7 +18,6 @@
 package org.springframework.cli.runtime.command;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.function.Function;
@@ -41,7 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.cli.SpringCliException;
-import org.springframework.cli.profile.ProfileService;
+import org.springframework.cli.roles.RoleService;
 import org.springframework.cli.runtime.engine.actions.Action;
 import org.springframework.cli.runtime.engine.actions.ActionFileReader;
 import org.springframework.cli.runtime.engine.actions.ActionFileVisitor;
@@ -108,37 +108,62 @@ public class DynamicCommand {
 	public void execute(CommandContext commandContext) {
 		Map<String, Object> model = new HashMap<>();
 		addMatchedOptions(model, commandContext);
-		addProfileVariables(model, commandContext);
+		addRoleVariables(model, commandContext);
 		runCommand(IoUtils.getWorkingDirectory(), ".spring", "commands", model);
 	}
 	private void addMatchedOptions(Map<String, Object> model, CommandContext commandContext) {
 		List<CommandParserResult> commandParserResults = commandContext.getParserResults().results();
 		for (CommandParserResult commandParserResult : commandParserResults) {
-			// TODO will value() be populated with defaultValue() if not passed in?
 			String kebabOption = NamingUtils.toKebab(commandParserResult.option().getLongNames()[0]);
-			// TODO will value() be populated with defaultValue() if not passed in?
+			// TODO remove toString to use type info
+			// This puts in default values as well.
 			model.put(kebabOption, commandParserResult.value().toString());
 		}
 	}
-	private void addProfileVariables(Map<String, Object> model, CommandContext commandContext) {
-		Properties properties = new Properties();
-		ProfileService profileService = new ProfileService();
-
-		String profile = "";
-		if (model.containsKey("profile")) {
-			profile = (String) model.get("profile");
+	private void addRoleVariables(Map<String, Object> model, CommandContext commandContext) {
+		RoleService roleService = new RoleService();
+		String role = "";
+		if (model.containsKey("role")) {
+			role = (String) model.get("role");
 		}
-		File profileFile = profileService.getFile(profile);
-		if (profileFile.exists()) {
-			Map<String, Object> propertiesAsMap = profileService.loadAsMap(profile);
-			for (Entry<String, Object> stringObjectEntry : propertiesAsMap.entrySet()) {
-				System.out.println(stringObjectEntry.getKey() + ";" + stringObjectEntry.getValue() + ";" +
-						stringObjectEntry.getValue().getClass());
+		File roleFile = roleService.getFile(role);
+		if (roleFile.exists()) {
+			Map<String, Object> variableMap = roleService.loadAsMap(role);
+			for (Entry<String, Object> stringObjectEntry : variableMap.entrySet()) {
+				String key = stringObjectEntry.getKey();
+				Object value = stringObjectEntry.getValue();
+				boolean usedDefaultValue = usedDefaultValue(key, commandContext);
+				// Do not add if the option name is already there due to passing from the command line options
+				if (usedDefaultValue) {
+					// Override the default value with the value from the Role Variable.
+					model.put(key, value);
+					String message = StringUtils.hasText(role) ? " role " + role : "the default role ";
+					this.terminalMessage.print("Using key=" + key + " , value = " + value + " from " + message);
+				}
 			}
 		} else {
-			this.terminalMessage.print("Properties file for profile '" + profile + "' does not exist.");
+			this.terminalMessage.print("Properties file for role '" + role + "' does not exist.");
 		}
 
+	}
+
+	private boolean usedDefaultValue(String variableName, CommandContext commandContext) {
+		boolean usedDefaultValue = false;
+		// Look for matching option of the provided variable name and determine if a default value was used.
+		List<CommandParserResult> commandParserResults = commandContext.getParserResults().results();
+		for (CommandParserResult commandParserResult : commandParserResults) {
+			String optionName = NamingUtils.toKebab(commandParserResult.option().getLongNames()[0]);
+			if (variableName.equals(optionName)) {
+				Object defaultOptionValue = commandParserResult.option().getDefaultValue();
+				Object optionValue = commandParserResult.value();
+				if (defaultOptionValue != null && optionValue != null) {
+					if (defaultOptionValue.equals(optionValue)) {
+						usedDefaultValue = true;
+					}
+				}
+			}
+		}
+		return usedDefaultValue;
 	}
 
 	public void runCommand(Path workingDirectory, String springDir, String commandsDir,

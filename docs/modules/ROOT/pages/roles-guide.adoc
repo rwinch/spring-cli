@@ -1,0 +1,73 @@
+= Roles
+
+Roles in your CLI provide a way to organize and reuse variables across user-defined commands.
+
+The Spring CLI includes a default, unnamed role that is always present.
+Additionally, roles can be associated with specific names to further differentiate their purpose and usage. These roles are stored as YAML files within the .spring/roles directory, which is located alongside the .spring/commands directory.
+
+These roles allow you to define variables that are accessible in an Action File, providing a way to share data between commands.
+
+Additionally, roles can be used to supply values for command line options. If a command line option does not have a value specified, and there is a role variable with the same name as the command option, the command will utilize the value of the role variable for that specific command option.
+
+== Quick Start
+
+In this quick start we will add a variable to the default role using the command:
+
+[source,bash]
+----
+$ spring role set --key greeting --value Mondo!
+Key-value pair added to the default role
+----
+
+You can now retrieve the value of that variable using the command:
+
+[source,bash]
+----
+$ spring role get --key greeting
+Mondo!
+----
+
+Now let's use that variable inside a User Defined Command.
+Create a user defined command `hello say`
+
+[source,bash]
+----
+$ spring command new --command-name hello --sub-command-name say
+Created user defined command /home/mark/testing-spring-cli/roles/myapp/.spring/commands/hello/say
+----
+
+In the directory `.spring/commands/hello/say` is the file `command.yaml` with the following contents:
+
+[source,yaml]
+----
+command:
+  description: Generate a new file with a hello message
+  options:
+    #
+    - name: greeting
+      description: who or what to say hello to
+      dataType: string
+      defaultValue: World
+      inputType: text     # TEXT
+----
+
+The important thing to notice is that the name of the Command Line Option is `greeting`.
+This matches name of the Role Variable we created.
+
+In the directory `.spring/commands/hello/say` is the Action File `hello.yaml` with the following contents:
+
+[source,yaml]
+----
+actions:
+  - generate:
+      to: hello.txt
+      text: Hello {{greeting}} on {{os-name}}.
+----
+
+When we execute the command and do not pass in the `greeting` Command Line Option, the value of `greeting` will come from the Role Variable of the same name.
+
+[source,bash]
+----
+$ spring hello say
+Generated /home/mark/testing-spring-cli/roles/myapp/hello.txt
+----
