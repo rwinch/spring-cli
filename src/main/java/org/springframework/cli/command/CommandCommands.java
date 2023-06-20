@@ -75,7 +75,6 @@ public class CommandCommands extends AbstractSpringCliCommands  {
 		classPathResource = new ClassPathResource("org/springframework/cli/commands/command.yaml");
 		IoUtils.writeToDir(commandPath.toFile(), "command.yaml", classPathResource);
 		terminalMessage.print("Created user defined command " + commandPath);
-
 	}
 
 	@Command(command = "add", description = "Add a user-defined command")

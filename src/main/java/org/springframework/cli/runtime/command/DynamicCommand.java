@@ -17,6 +17,8 @@
 
 package org.springframework.cli.runtime.command;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collector;
@@ -38,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.cli.SpringCliException;
+import org.springframework.cli.profile.ProfileService;
 import org.springframework.cli.runtime.engine.actions.Action;
 import org.springframework.cli.runtime.engine.actions.ActionFileReader;
 import org.springframework.cli.runtime.engine.actions.ActionFileVisitor;
@@ -97,17 +101,16 @@ public class DynamicCommand {
 	}
 
 	/**
-	 * The main method called by spring-shell.  It is *not* and unused method, see
+	 * The main method called by spring-shell.  It is *not* an unused method, see
 	 * DynamicMethodCommandResolver for usage.
 	 * @param commandContext the command context for the dynamic command.
 	 */
 	public void execute(CommandContext commandContext) {
 		Map<String, Object> model = new HashMap<>();
 		addMatchedOptions(model, commandContext);
+		addProfileVariables(model, commandContext);
 		runCommand(IoUtils.getWorkingDirectory(), ".spring", "commands", model);
 	}
-
-
 	private void addMatchedOptions(Map<String, Object> model, CommandContext commandContext) {
 		List<CommandParserResult> commandParserResults = commandContext.getParserResults().results();
 		for (CommandParserResult commandParserResult : commandParserResults) {
@@ -117,7 +120,26 @@ public class DynamicCommand {
 			model.put(kebabOption, commandParserResult.value().toString());
 		}
 	}
+	private void addProfileVariables(Map<String, Object> model, CommandContext commandContext) {
+		Properties properties = new Properties();
+		ProfileService profileService = new ProfileService();
 
+		String profile = "";
+		if (model.containsKey("profile")) {
+			profile = (String) model.get("profile");
+		}
+		File profileFile = profileService.getFile(profile);
+		if (profileFile.exists()) {
+			Map<String, Object> propertiesAsMap = profileService.loadAsMap(profile);
+			for (Entry<String, Object> stringObjectEntry : propertiesAsMap.entrySet()) {
+				System.out.println(stringObjectEntry.getKey() + ";" + stringObjectEntry.getValue() + ";" +
+						stringObjectEntry.getValue().getClass());
+			}
+		} else {
+			this.terminalMessage.print("Properties file for profile '" + profile + "' does not exist.");
+		}
+
+	}
 
 	public void runCommand(Path workingDirectory, String springDir, String commandsDir,
 			Map<String, Object> model)  {
