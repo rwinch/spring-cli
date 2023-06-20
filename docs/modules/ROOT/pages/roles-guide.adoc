@@ -15,7 +15,7 @@ In this quick start we will add a variable to the default role using the command
 
 [source,bash]
 ----
-$ spring role set --key greeting --value Mondo!
+$ spring role set --key greeting --value Mondo
 Key-value pair added to the default role
 ----
 
@@ -24,7 +24,7 @@ You can now retrieve the value of that variable using the command:
 [source,bash]
 ----
 $ spring role get --key greeting
-Mondo!
+Mondo
 ----
 
 Now let's use that variable inside a User Defined Command.
@@ -69,5 +69,15 @@ When we execute the command and do not pass in the `greeting` Command Line Optio
 [source,bash]
 ----
 $ spring hello say
+Using key=greeting , value = Mondo from the default role
 Generated /home/mark/testing-spring-cli/roles/myapp/hello.txt
 ----
+
+The generated file contents are:
+
+[source]
+----
+Hello Mondo on Linux
+----
+
+The variable `{{greeting}}`'s value from the Role Variable because it was not passed in as a command line option.

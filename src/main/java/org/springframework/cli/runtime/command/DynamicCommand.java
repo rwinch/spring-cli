@@ -138,7 +138,7 @@ public class DynamicCommand {
 					// Override the default value with the value from the Role Variable.
 					model.put(key, value);
 					String message = StringUtils.hasText(role) ? " role " + role : "the default role ";
-					this.terminalMessage.print("Using key=" + key + " , value = " + value + " from " + message);
+					this.terminalMessage.print("Using key = " + key + " , value = " + value + " from " + message);
 				}
 			}
 		} else {
