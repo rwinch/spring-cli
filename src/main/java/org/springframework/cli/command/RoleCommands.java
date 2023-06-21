@@ -19,11 +19,13 @@ package org.springframework.cli.command;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cli.SpringCliException;
 import org.springframework.cli.roles.RoleService;
 import org.springframework.cli.util.TerminalMessage;
@@ -36,18 +38,29 @@ import org.springframework.shell.table.TableBuilder;
 import org.springframework.shell.table.TableModel;
 import org.springframework.util.StringUtils;
 
-import static org.springframework.cli.roles.RoleService.ROLES_PATH;
-
 @Command(command = "role", group = "Role")
 public class RoleCommands extends AbstractSpringCliCommands {
 
 	private final TerminalMessage terminalMessage;
 
-	private final RoleService roleService = new RoleService();
+	private RoleService roleService;
 
+	@Autowired
 	public RoleCommands(TerminalMessage terminalMessage) {
 		this.terminalMessage = terminalMessage;
+		this.roleService = new RoleService();
 	}
+
+	/**
+	 * Primarily used for testing
+	 * @param terminalMessage used to print to console
+	 * @param workingDir where to run the command
+	 */
+	public RoleCommands(TerminalMessage terminalMessage, Path workingDir) {
+		this.terminalMessage = terminalMessage;
+		this.roleService = new RoleService(workingDir);
+	}
+
 
 	@Command(command = "add", description = "Add a role")
 	public void roleAdd(@Option(description = "Role name", required = true) String name) {
@@ -71,7 +84,7 @@ public class RoleCommands extends AbstractSpringCliCommands {
 		File roleFile = this.roleService.getFile(name);
 		if (roleFile.exists()) {
 			if (roleFile.delete()) {
-				String message = StringUtils.hasText(name) ? " Role " + name : "The default role was ";
+				String message = StringUtils.hasText(name) ? "Role '" + name + "'" : "The default role file was ";
 				this.terminalMessage.print(message + " deleted.");
 			}
 		} else {
@@ -88,7 +101,7 @@ public class RoleCommands extends AbstractSpringCliCommands {
 			name = "";
 		}
 		this.roleService.updateRole(name, key, value);
-		String message = StringUtils.hasText(name) ? "to role " + name : "to the default role ";
+		String message = StringUtils.hasText(name) ? "to role '" + name + "'" : "to the default role ";
 		this.terminalMessage.print("Key-value pair added " + message);
 	}
 
@@ -102,7 +115,7 @@ public class RoleCommands extends AbstractSpringCliCommands {
 			if (value != null) {
 				this.terminalMessage.print(value.toString());
 			} else {
-				String message = StringUtils.hasText(name) ? " role " + name : "the default role ";
+				String message = StringUtils.hasText(name) ? " role " + name : "the default role";
 				this.terminalMessage.print("Key '" + key + "' not found in " + message);
 			}
 		} else {
@@ -113,7 +126,7 @@ public class RoleCommands extends AbstractSpringCliCommands {
 
 	@Command(command = "list", description = "List roles")
 	public Table roleList() {
-		File directory = new File(ROLES_PATH);
+		File directory = this.roleService.getRolesPath();
 		List<String> rolesNames = this.roleService.getRoleNames(directory);
 		Stream<String[]> header = Stream.<String[]>of(new String[] { "Name" });
 		Stream<String[]> rows;
@@ -131,4 +144,7 @@ public class RoleCommands extends AbstractSpringCliCommands {
 		return tableBuilder.addFullBorder(BorderStyle.fancy_light).build();
 	}
 
+	public RoleService getRoleService() {
+		return roleService;
+	}
 }

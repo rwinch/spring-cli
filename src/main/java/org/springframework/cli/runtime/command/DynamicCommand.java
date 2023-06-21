@@ -128,18 +128,24 @@ public class DynamicCommand {
 		}
 		File roleFile = roleService.getFile(role);
 		if (roleFile.exists()) {
-			Map<String, Object> variableMap = roleService.loadAsMap(role);
-			for (Entry<String, Object> stringObjectEntry : variableMap.entrySet()) {
-				String key = stringObjectEntry.getKey();
-				Object value = stringObjectEntry.getValue();
-				boolean usedDefaultValue = usedDefaultValue(key, commandContext);
+			Map<String, Object> roleVariableMap = roleService.loadAsMap(role);
+			for (Entry<String, Object> roleMapEntry : roleVariableMap.entrySet()) {
+				String roleKey = roleMapEntry.getKey();
+				Object roleValue = roleMapEntry.getValue();
+				boolean usedDefaultValue = usedDefaultValue(roleKey, commandContext);
 				// Do not add if the option name is already there due to passing from the command line options
 				if (usedDefaultValue) {
-					// Override the default value with the value from the Role Variable.
-					model.put(key, value);
+					// Override the default roleValue with the roleValue from the Role Variable.
+					model.put(roleKey, roleValue);
 					String message = StringUtils.hasText(role) ? " role " + role : "the default role ";
-					this.terminalMessage.print("Using key = " + key + " , value = " + value + " from " + message);
+					this.terminalMessage.print("Using Role variable instead of default command line option for roleKey = " + roleKey + " , roleValue = " + roleValue + " from " + message);
 				}
+			}
+			// Insert map variables that are independent of the command line option names
+			for (Entry<String, Object> roleMapEntry : roleVariableMap.entrySet()) {
+				String roleKey = roleMapEntry.getKey();
+				Object roleValue = roleMapEntry.getValue();
+				model.putIfAbsent(roleKey, roleValue);
 			}
 		} else {
 			this.terminalMessage.print("Properties file for role '" + role + "' does not exist.");

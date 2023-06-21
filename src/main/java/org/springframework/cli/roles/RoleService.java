@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,12 +36,21 @@ import org.yaml.snakeyaml.Yaml;
 import org.springframework.beans.factory.config.YamlMapFactoryBean;
 import org.springframework.beans.factory.config.YamlProcessor.ResolutionMethod;
 import org.springframework.cli.SpringCliException;
+import org.springframework.cli.util.IoUtils;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.util.StringUtils;
 
 public class RoleService {
 
-	public static String ROLES_PATH = ".spring/roles";
+	private Path workingDirectory = IoUtils.getWorkingDirectory();
+
+	public RoleService() {
+
+	}
+
+	public RoleService(Path workingDirectory) {
+		this.workingDirectory = workingDirectory;
+	}
 
 	public Map<String, Object> loadAsMap(String name) {
 		YamlMapFactoryBean factory = new YamlMapFactoryBean();
@@ -116,7 +126,10 @@ public class RoleService {
 	}
 
 	public void createRolesDirectoryIfNecessary() {
-		File directory = new File(ROLES_PATH);
+		if (! IoUtils.inProjectRootDirectory(this.workingDirectory) ) {
+			throw new SpringCliException("You need to be in the root project directory to run 'role' commands.");
+		}
+		File directory = getRolesPath();
 		if (!directory.exists()) {
 			directory.mkdirs();
 		}
@@ -130,8 +143,12 @@ public class RoleService {
 		} else {
 			fileName = "vars.yml";
 		}
-		String filePath = ROLES_PATH + File.separator + fileName;
+		String filePath = getRolesPath() + File.separator + fileName;
 		File propertiesFile = new File(filePath);
 		return propertiesFile;
+	}
+
+	public File getRolesPath() {
+		return this.workingDirectory.resolve(".spring/roles").toFile();
 	}
 }
