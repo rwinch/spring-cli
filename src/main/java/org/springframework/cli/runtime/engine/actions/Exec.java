@@ -60,13 +60,13 @@ public class Exec {
 	 */
 	private final String dir;
 
-	private final Define define;
+	private final DefineExec define;
 
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 	public Exec(@JsonProperty("to") String to, @JsonProperty("command") String command,
 			@JsonProperty("command-file") String commandFile,
 			@JsonProperty("errto") String errto,
-			@JsonProperty("dir") String dir, @JsonProperty("define") Define define) {
+			@JsonProperty("dir") String dir, @JsonProperty("define") DefineExec define) {
 		this.to = to;
 		this.command = command;
 		this.commandFile = commandFile;
@@ -97,7 +97,7 @@ public class Exec {
 		return dir;
 	}
 
-	public Define getDefine() {
+	public DefineExec getDefine() {
 		return define;
 	}
 

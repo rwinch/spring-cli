@@ -27,14 +27,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Properties;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-import org.apache.maven.model.Model;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
 import org.slf4j.Logger;
@@ -46,6 +43,7 @@ import org.springframework.cli.runtime.engine.actions.Action;
 import org.springframework.cli.runtime.engine.actions.ActionFileReader;
 import org.springframework.cli.runtime.engine.actions.ActionFileVisitor;
 import org.springframework.cli.runtime.engine.actions.ActionsFile;
+import org.springframework.cli.runtime.engine.actions.Define;
 import org.springframework.cli.runtime.engine.actions.Exec;
 import org.springframework.cli.runtime.engine.actions.Generate;
 import org.springframework.cli.runtime.engine.actions.Inject;
@@ -53,6 +51,7 @@ import org.springframework.cli.runtime.engine.actions.InjectMavenBuildPlugin;
 import org.springframework.cli.runtime.engine.actions.InjectMavenDependency;
 import org.springframework.cli.runtime.engine.actions.InjectMavenDependencyManagement;
 import org.springframework.cli.runtime.engine.actions.InjectMavenRepository;
+import org.springframework.cli.runtime.engine.actions.handlers.DefineActionHandler;
 import org.springframework.cli.runtime.engine.actions.handlers.ExecActionHandler;
 import org.springframework.cli.runtime.engine.actions.handlers.GenerateActionHandler;
 import org.springframework.cli.runtime.engine.actions.handlers.InjectActionHandler;
@@ -69,8 +68,6 @@ import org.springframework.cli.util.TerminalMessage;
 import org.springframework.shell.command.CommandContext;
 import org.springframework.shell.command.CommandParser.CommandParserResult;
 import org.springframework.util.StringUtils;
-
-import static org.springframework.cli.runtime.engine.model.MavenModelPopulator.MAVEN_MODEL;
 
 /**
  * Object that is registered and executed for all dynamic commands discovered
@@ -147,7 +144,9 @@ public class DynamicCommand {
 				model.putIfAbsent(roleKey, roleValue);
 			}
 		} else {
-			this.terminalMessage.print("Properties file for role '" + role + "' does not exist.");
+			if (StringUtils.hasText(role)) {
+				this.terminalMessage.print("File for role '" + role + "' does not exist.  Create role using 'role add'");
+			}
 		}
 
 	}
@@ -263,6 +262,11 @@ public class DynamicCommand {
 					execActionHandler.executeShellCommand(exec);
 				}
 
+				Define define = action.getDefine();
+				if (define != null) {
+					DefineActionHandler defineActionHandler = new DefineActionHandler(templateEngine, model, terminalMessage);
+					defineActionHandler.execute(define);
+				}
 			}
 		}
 
