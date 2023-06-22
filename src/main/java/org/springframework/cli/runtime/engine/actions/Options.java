@@ -22,23 +22,26 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.springframework.lang.Nullable;
 
-public class Define {
+public class Options {
 
-	private Var var;
+	@Nullable
+	private Exec exec;
 
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	Define(@JsonProperty("vars") @Nullable Var var) {
-		this.var = var;
+	Options(@JsonProperty("exec") @Nullable Exec exec) {
+		this.exec = exec;
 	}
 
-	public Var getVar() {
-		return var;
+	@Nullable
+	public Exec getExec() {
+		return exec;
 	}
 
 	@Override
 	public String toString() {
-		return "Define{" +
-				"var=" + var +
+		return "Options{" +
+				"exec=" + exec +
 				'}';
 	}
 }
+

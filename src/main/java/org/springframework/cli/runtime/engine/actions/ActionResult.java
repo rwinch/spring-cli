@@ -17,28 +17,27 @@
 
 package org.springframework.cli.runtime.engine.actions;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Map;
 
-import org.springframework.lang.Nullable;
+public class ActionResult {
 
-public class Define {
+	private Map<String, String> outputs;
 
-	private Var var;
+	private Throwable error;
 
-	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	Define(@JsonProperty("vars") @Nullable Var var) {
-		this.var = var;
-	}
+	/**
+	 * The result of a completed step after continue-on-error is applied.
+	 * Possible values are success, failure, or skipped.
+	 * When a continue-on-error action fails, the outcome is failure,
+	 * but the final conclusion is success.
+	 */
+	private ActionStatus conclusion;
 
-	public Var getVar() {
-		return var;
-	}
-
-	@Override
-	public String toString() {
-		return "Define{" +
-				"var=" + var +
-				'}';
-	}
+	/**
+	 * The result of a completed step before continue-on-error is applied.
+	 * Possible values are success, failure, or skipped.
+	 * When a continue-on-error action fails, the outcome is failure,
+	 * but the final conclusion is success.
+	 */
+	private ActionStatus outcome;
 }

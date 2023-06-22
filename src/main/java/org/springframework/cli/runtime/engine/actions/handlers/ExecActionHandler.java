@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.cli.SpringCliException;
+import org.springframework.cli.runtime.engine.actions.ActionResult;
 import org.springframework.cli.runtime.engine.actions.Exec;
 import org.springframework.cli.runtime.engine.templating.TemplateEngine;
 import org.springframework.cli.util.TerminalMessage;
@@ -53,6 +54,14 @@ import org.springframework.util.StringUtils;
 public class ExecActionHandler {
 
 	private static final Logger logger = LoggerFactory.getLogger(ExecActionHandler.class);
+
+	public static String OUTPUT_STDOUT = "stdout";
+
+	public static String OUTPUT_STDERR = "stderr";
+
+	public static String OUTPUT_EXIT_VALUE = "exit-value";
+
+	public static String OUTPUT_STDOUT_JSONPATH = "stdout-json-path";
 
 	private final TemplateEngine templateEngine;
 
@@ -69,7 +78,7 @@ public class ExecActionHandler {
 		this.terminalMessage = terminalMessage;
 	}
 
-	public void executeShellCommand(Exec exec) {
+	public void executeShellCommand(Exec exec, Map<String, Object> outputs) {
 		if (!StringUtils.hasText(exec.getCommand()) && !StringUtils.hasText(exec.getCommandFile())) {
 			throw new SpringCliException("No text found for command: or command-file: field in exec action.");
 		}
@@ -139,18 +148,19 @@ public class ExecActionHandler {
 			}
 
 			boolean exited = process.waitFor(300, TimeUnit.SECONDS);
+
+			outputs.put(OUTPUT_STDOUT, stdout.get());
+			outputs.put(OUTPUT_STDERR, stderr.get());
+			outputs.put(OUTPUT_EXIT_VALUE, process.exitValue());
+
+			// Logging success or failure to terminal and optionally process stdout with JSON Path
 			if (exited) {
 				if (process.exitValue() == 0) {
 					terminalMessage.print("Command '" + StringUtils.arrayToDelimitedString(commands, " ") + "' executed successfully");
-					if (exec.getDefine() != null) {
-						if (exec.getDefine().getName() != null) {
-							if (exec.getDefine().getJsonPath() != null) {
-								handleJsonPath(exec, stdout);
-							} else {
-								model.putIfAbsent(exec.getDefine().getName(), stdout.get());
-							}
-						} else {
-							terminalMessage.print("exec: define: name: has a null value.  Define = " + exec.getDefine());
+					if (exec.getJsonPath() != null) {
+						Optional<Object> jsonPathOutput = applyJsonPath(exec, stdout);
+						if (jsonPathOutput.isPresent()) {
+							outputs.put(OUTPUT_STDOUT_JSONPATH, jsonPathOutput.get());
 						}
 					}
 				}
@@ -172,7 +182,7 @@ public class ExecActionHandler {
 		}
 	}
 
-	private void handleJsonPath(Exec exec, Optional<String> stdout) {
+	private Optional<Object> applyJsonPath(Exec exec, Optional<String> stdout) {
 		if (stdout.isPresent()) {
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
@@ -182,11 +192,12 @@ public class ExecActionHandler {
 							.jsonProvider(new JacksonJsonProvider(mapper))
 							.mappingProvider(new JacksonMappingProvider(mapper))
 							.build()
-			).parse(stdout.get()).read(exec.getDefine().getJsonPath());
+			).parse(stdout.get()).read(exec.getJsonPath());
 			if (data != null) {
-				model.putIfAbsent(exec.getDefine().getName(), data);
+				return Optional.of(data);
 			}
 		}
+		return Optional.empty();
 	}
 
 	private Optional<String> readStringFromInputStream(InputStream input) {

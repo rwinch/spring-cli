@@ -15,30 +15,16 @@
  */
 
 
-package org.springframework.cli.runtime.engine.actions;
+package org.springframework.cli.runtime.engine.actions.handlers;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cli.support.MockConfigurations.MockBaseConfig;
 
-import org.springframework.lang.Nullable;
+public class VarsActionHandlerTests {
 
-public class Define {
+	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+			.withUserConfiguration(MockBaseConfig.class);
 
-	private Var var;
 
-	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	Define(@JsonProperty("vars") @Nullable Var var) {
-		this.var = var;
-	}
 
-	public Var getVar() {
-		return var;
-	}
-
-	@Override
-	public String toString() {
-		return "Define{" +
-				"var=" + var +
-				'}';
-	}
 }

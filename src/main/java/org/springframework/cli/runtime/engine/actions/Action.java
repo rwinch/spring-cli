@@ -43,10 +43,8 @@ public class Action {
 	@Nullable
 	private Exec exec;
 
-
-	// TODO These actions are 'recipes' and should be extracted into a more formal recipe section
-	//      They were implemented before the likes of open-rewrite had this functionality, it is
-	//		expected that we will migrate this functionality to be based on open-rewrite
+	@Nullable
+	private Vars vars;
 
 	@Nullable
 	private InjectMavenDependency injectMavenDependency;
@@ -66,6 +64,7 @@ public class Action {
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 	Action(@JsonProperty("generate") @Nullable Generate generate,
 			@JsonProperty("exec") @Nullable Exec exec,
+			@JsonProperty("vars") @Nullable Vars vars,
 			@JsonProperty("inject-maven-dependency") @Nullable InjectMavenDependency injectMavenDependency,
 			@JsonProperty("inject-maven-dependency-management") @Nullable InjectMavenDependencyManagement injectMavenDependencyManagement,
 			@JsonProperty("inject-maven-repository") @Nullable InjectMavenRepository injectMavenRepository,
@@ -74,6 +73,7 @@ public class Action {
 			@JsonProperty("inject") @Nullable Inject inject) {
 		this.generate = generate;
 		this.exec = exec;
+		this.vars = vars;
 		this.injectMavenDependency = injectMavenDependency;
 		this.injectMavenDependencyManagement = injectMavenDependencyManagement;
 		this.injectMavenRepository = injectMavenRepository;
@@ -90,6 +90,11 @@ public class Action {
 	@Nullable
 	public Exec getExec() {
 		return exec;
+	}
+
+	@Nullable
+	public Vars getVars() {
+		return vars;
 	}
 
 	@Nullable
@@ -134,6 +139,7 @@ public class Action {
 				"generate=" + generate +
 				", inject=" + inject +
 				", exec=" + exec +
+				", vars=" + vars +
 				", injectMavenDependency=" + injectMavenDependency +
 				", injectMavenDependencyManagement=" + injectMavenDependencyManagement +
 				", injectMavenRepository=" + injectMavenRepository +

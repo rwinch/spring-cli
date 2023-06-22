@@ -17,28 +17,33 @@
 
 package org.springframework.cli.runtime.engine.actions;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.springframework.lang.Nullable;
 
-public class Define {
+public class Vars {
 
-	private Var var;
+	private List<Question> questions;
 
-	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	Define(@JsonProperty("vars") @Nullable Var var) {
-		this.var = var;
+	Vars(@JsonProperty("questions") @Nullable List<Question> questions) {
+		this.questions = questions;
 	}
 
-	public Var getVar() {
-		return var;
+	public List<Question> getQuestions() {
+		return questions;
 	}
+
+	// files
+
+	// key-values
+
 
 	@Override
 	public String toString() {
-		return "Define{" +
-				"var=" + var +
+		return "Vars{" +
+				"questions=" + questions +
 				'}';
 	}
 }

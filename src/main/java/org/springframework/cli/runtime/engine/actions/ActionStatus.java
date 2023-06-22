@@ -17,28 +17,30 @@
 
 package org.springframework.cli.runtime.engine.actions;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+public enum ActionStatus {
 
-import org.springframework.lang.Nullable;
+	SUCCESS("success"),
 
-public class Define {
+	FAILURE("failure"),
 
-	private Var var;
+	SKIPPED("skipped");
 
-	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	Define(@JsonProperty("vars") @Nullable Var var) {
-		this.var = var;
+	private final String value;
+
+	ActionStatus(String value) {
+		this.value = value;
 	}
 
-	public Var getVar() {
-		return var;
+	public String getValue() {
+		return value;
 	}
 
-	@Override
-	public String toString() {
-		return "Define{" +
-				"var=" + var +
-				'}';
+	public static ActionStatus fromValue(String value) {
+		for (ActionStatus status : ActionStatus.values()) {
+			if (status.getValue().equals(value)) {
+				return status;
+			}
+		}
+		throw new IllegalArgumentException("Invalid action status: " + value);
 	}
 }
