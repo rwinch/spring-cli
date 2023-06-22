@@ -19,6 +19,7 @@ package org.springframework.cli.runtime.engine.actions.handlers;
 
 import java.util.Map;
 
+import org.jline.terminal.Terminal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,10 +29,17 @@ import org.springframework.cli.runtime.engine.actions.Question;
 import org.springframework.cli.runtime.engine.actions.Var;
 import org.springframework.cli.runtime.engine.templating.TemplateEngine;
 import org.springframework.cli.util.TerminalMessage;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.shell.component.context.ComponentContext;
 import org.springframework.shell.component.flow.ComponentFlow;
 import org.springframework.shell.component.flow.ComponentFlow.ComponentFlowResult;
 import org.springframework.shell.component.flow.ResultMode;
+import org.springframework.shell.style.TemplateExecutor;
+import org.springframework.shell.style.Theme;
+import org.springframework.shell.style.ThemeRegistry;
+import org.springframework.shell.style.ThemeResolver;
+import org.springframework.shell.style.ThemeSettings;
 
 import static org.springframework.cli.util.JavaUtils.inferType;
 
@@ -45,21 +53,46 @@ public class DefineActionHandler {
 
 	private TerminalMessage terminalMessage;
 
-	public DefineActionHandler(TemplateEngine templateEngine, Map<String, Object> model, TerminalMessage terminalMessage) {
+	private Terminal terminal;
+
+	public DefineActionHandler(TemplateEngine templateEngine, Map<String, Object> model, TerminalMessage terminalMessage, Terminal terminal) {
 		this.templateEngine = templateEngine;
 		this.model = model;
 		this.terminalMessage = terminalMessage;
+		this.terminal = terminal;
 	}
 
 	public void execute(Define define) {
+		System.out.println("Define: execute");
 		Var var = define.getVar();
 		From from = var.getFrom();
 		Question question = from.getQuestion();
 		String questionText = question.getText();
 		String variableName = question.getName();
 
+		ThemeRegistry themeRegistry = new ThemeRegistry();
+		themeRegistry.register(new Theme() {
+			@Override
+			public String getName() {
+				return "default";
+			}
+
+			@Override
+			public ThemeSettings getSettings() {
+				return ThemeSettings.defaults();
+			}
+		});
+		ThemeResolver themeResolver = new ThemeResolver(themeRegistry, "default");
+		TemplateExecutor templateExecutor = new TemplateExecutor(themeResolver);
+
+		ResourceLoader resourceLoader = new DefaultResourceLoader();
 		String resultValue = "";
 		ComponentFlow wizard = ComponentFlow.builder().reset()
+				.terminal(this.terminal)
+				.resourceLoader(resourceLoader)
+				.templateExecutor(templateExecutor)
+
+				// now the good stuff
 				.withStringInput(variableName) //this is the variable name
 				.name(questionText) // This is the text string the user sees.
 				.resultValue(resultValue)

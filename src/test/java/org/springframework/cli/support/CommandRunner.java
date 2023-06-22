@@ -63,7 +63,7 @@ public class CommandRunner {
 			String[] commandAndSubCommand = executeCommand.split("\\/");
 			Map<String, ModelPopulator> modelPopulatorMap = context.getBeansOfType(ModelPopulator.class);
 			DynamicCommand dynamicCommand = new DynamicCommand(commandAndSubCommand[0], commandAndSubCommand[1],
-					new ArrayList<>(modelPopulatorMap.values()), TerminalMessage.noop());
+					new ArrayList<>(modelPopulatorMap.values()), TerminalMessage.noop(), null);
 
 			Map<String, Object> model = new HashMap<>();
 			for (Entry<String, String> argument : arguments) {

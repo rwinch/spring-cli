@@ -27,11 +27,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import org.jline.terminal.Terminal;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
 import org.slf4j.Logger;
@@ -87,13 +89,18 @@ public class DynamicCommand {
 
 	private final TemplateEngine templateEngine;
 
+	private final Optional<Terminal> terminalOptional;
 
-	public DynamicCommand(String commandName, String subCommandName, Iterable<ModelPopulator> modelPopulators, TerminalMessage terminalMessage) {
+	public DynamicCommand(String commandName, String subCommandName,
+			Iterable<ModelPopulator> modelPopulators,
+			TerminalMessage terminalMessage,
+			Optional<Terminal> terminalOptional) {
 		this.commandName = commandName;
 		this.subCommandName = subCommandName;
 		this.modelPopulators = modelPopulators;
 		this.terminalMessage = terminalMessage;
 		this.templateEngine = new HandlebarsTemplateEngine();
+		this.terminalOptional = terminalOptional;
 	}
 
 	/**
@@ -264,7 +271,10 @@ public class DynamicCommand {
 
 				Define define = action.getDefine();
 				if (define != null) {
-					DefineActionHandler defineActionHandler = new DefineActionHandler(templateEngine, model, terminalMessage);
+					if (terminalOptional.isEmpty()) {
+						throw new SpringCliException("Spring Shell Terminal not available to Define action.");
+					}
+					DefineActionHandler defineActionHandler = new DefineActionHandler(templateEngine, model, terminalMessage, terminalOptional.get());
 					defineActionHandler.execute(define);
 				}
 			}
