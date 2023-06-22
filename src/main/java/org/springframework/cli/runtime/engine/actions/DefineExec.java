@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package org.springframework.cli.runtime.engine.actions;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -22,23 +21,47 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.springframework.lang.Nullable;
 
-public class Define {
+/**
+ * Subsection of the `Exec` action that specifies a model variable to define as the
+ * result of executing the command.
+ * The expectation is that the result of executing the command is a JSON object, so
+ * a JSON-Path is specified to parse our the variable value.
+ */
+public class DefineExec {
 
-	private Var var;
+	/**
+	 * The name of the model variable to define
+	 */
+	@Nullable
+	private final String name;
+
+	/**
+	 * The Json-path expression to use to specify the value of the model variable
+	 */
+	@Nullable
+	private final String jsonPath;
 
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	Define(@JsonProperty("vars") @Nullable Var var) {
-		this.var = var;
+	DefineExec(@JsonProperty("name") String name, @JsonProperty("jsonPath") String jsonPath) {
+		this.name = name;
+		this.jsonPath = jsonPath;
 	}
 
-	public Var getVar() {
-		return var;
+	@Nullable
+	public String getName() {
+		return name;
+	}
+
+	@Nullable
+	public String getJsonPath() {
+		return jsonPath;
 	}
 
 	@Override
 	public String toString() {
 		return "Define{" +
-				"var=" + var +
+				"name='" + name + '\'' +
+				", jsonPath='" + jsonPath + '\'' +
 				'}';
 	}
 }

@@ -40,6 +40,8 @@ import org.springframework.cli.util.IoUtils;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.util.StringUtils;
 
+import static org.springframework.cli.util.JavaUtils.inferType;
+
 public class RoleService {
 
 	private Path workingDirectory = IoUtils.getWorkingDirectory();
@@ -93,15 +95,6 @@ public class RoleService {
 					+ "' was not found.  Error = " + e.getMessage());
 		}
 
-	}
-
-	private Object inferType(Object value) {
-		ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-		try {
-			return objectMapper.readValue(value.toString(), Object.class);
-		} catch (IOException e) {
-			return value.toString();
-		}
 	}
 
 	public List<String> getRoleNames(File directory) {

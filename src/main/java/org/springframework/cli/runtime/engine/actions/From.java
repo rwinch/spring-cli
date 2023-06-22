@@ -22,23 +22,23 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.springframework.lang.Nullable;
 
-public class Define {
+public class From {
 
-	private Var var;
+	private Question question;
 
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	Define(@JsonProperty("vars") @Nullable Var var) {
-		this.var = var;
+	From(@JsonProperty("question") @Nullable Question question) {
+		this.question = question;
 	}
 
-	public Var getVar() {
-		return var;
+	public Question getQuestion() {
+		return question;
 	}
 
 	@Override
 	public String toString() {
-		return "Define{" +
-				"var=" + var +
+		return "From{" +
+				"question=" + question +
 				'}';
 	}
 }
