@@ -2,5 +2,10 @@ actions:
   - vars:
       questions:
         - question:
-          name: language
-          text: What is your primary language?
+          name: resource-group
+          label: Select a resource group.
+          type: dropdown
+          options:
+            exec:
+              command: az group list
+              json-path: $[0].name

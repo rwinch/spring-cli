@@ -86,8 +86,8 @@ public class ActionFileReader {
 	private static void checkForMissingQuestionTextAndName(List<String> contents, Resource resource, JsonProcessingException jsonProcessingException) {
 		if (jsonProcessingException.getMessage().contains("Cannot construct instance of `org.springframework.cli.runtime.engine.actions.Question`, problem: `java.lang.NullPointerException`")) {
 			throw new SpringCliException("Could not deserialize action file " + resource.getDescription() +
-					".  You may have forgot to define 'name' or 'text' as fields directly under the '-question:' field.  " +
-					"Nested exception message is " + jsonProcessingException.getMessage());
+					".  You may have forgot to define 'name' or 'label' as fields directly under the '-question:' field.  " +
+					"Nested exception message is " + jsonProcessingException.getMessage() + ". Location = " + jsonProcessingException.getLocation());
  		}
 	}
 

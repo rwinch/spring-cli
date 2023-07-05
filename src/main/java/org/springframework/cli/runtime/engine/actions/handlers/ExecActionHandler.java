@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.cli.SpringCliException;
+import org.springframework.cli.runtime.engine.actions.ActionResult;
 import org.springframework.cli.runtime.engine.actions.Exec;
 import org.springframework.cli.runtime.engine.templating.TemplateEngine;
 import org.springframework.cli.util.TerminalMessage;
@@ -69,7 +70,7 @@ public class ExecActionHandler {
 		this.terminalMessage = terminalMessage;
 	}
 
-	public void executeShellCommand(Exec exec) {
+	public ActionResult executeShellCommand(Exec exec) {
 		if (!StringUtils.hasText(exec.getCommand()) && !StringUtils.hasText(exec.getCommandFile())) {
 			throw new SpringCliException("No text found for command: or command-file: field in exec action.");
 		}
@@ -139,6 +140,9 @@ public class ExecActionHandler {
 			}
 
 			boolean exited = process.waitFor(300, TimeUnit.SECONDS);
+
+
+
 			if (exited) {
 				if (process.exitValue() == 0) {
 					terminalMessage.print("Command '" + StringUtils.arrayToDelimitedString(commands, " ") + "' executed successfully");

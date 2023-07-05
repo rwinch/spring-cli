@@ -45,7 +45,7 @@ public class ActionsFileReaderTests {
 			ActionsFile actionsFile = actionFileReader.read(classPathResource);
 		});
 
-		assertThat(exception.getMessage().contains("You may have forgot to define 'name' or 'text' as fields directly under the '-question:' field."));
+		assertThat(exception.getMessage().contains("You may have forgot to define 'name' or 'text' as fields directly under the '- question:' field."));
 	}
 
 	@Test
@@ -56,9 +56,15 @@ public class ActionsFileReaderTests {
 		assertThat(actionsFile.getActions().size()).isEqualTo(1);
 		Action action = actionsFile.getActions().get(0);
 		Vars vars = action.getVars();
+		Question question = vars.getQuestions().get(0);
 		assertThat(vars.getQuestions().size()).isEqualTo(1);
-		assertThat(vars.getQuestions().get(0).getName()).isEqualTo("language");
-		assertThat(vars.getQuestions().get(0).getText()).isEqualTo("What is your primary language?");
+		assertThat(question.getName()).isEqualTo("language");
+		assertThat(question.getLabel()).isEqualTo("What is your primary language?");
+		assertThat(question.getType()).isEqualTo("dropdown");
+		Options options = question.getOptions();
+		assertThat(options.getExec()).isNotNull();
+		assertThat(options.getExec().getCommand()).isEqualTo("az group list");
+		assertThat(options.getExec().getJsonPath()).isEqualTo("$[0].name");
 	}
 
 	@Test

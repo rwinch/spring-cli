@@ -274,7 +274,7 @@ public class DynamicCommand {
 					if (terminalOptional.isEmpty()) {
 						throw new SpringCliException("Spring Shell Terminal not available to Define action.");
 					}
-					VarsActionHandler varsActionHandler = new VarsActionHandler(templateEngine, model, terminalMessage, terminalOptional.get());
+					VarsActionHandler varsActionHandler = new VarsActionHandler(templateEngine, model, dynamicSubCommandPath, terminalMessage, terminalOptional.get());
 					varsActionHandler.execute(vars);
 				}
 			}

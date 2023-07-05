@@ -4,4 +4,4 @@ actions:
         - question:
 # wrong indention of name and text, ActionsFileReader will trigger a more helpful error message when deserializing
             name: language
-            text: What is your primary language?
+            label: What is your primary language?

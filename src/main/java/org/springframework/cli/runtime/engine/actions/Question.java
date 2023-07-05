@@ -28,28 +28,60 @@ public class Question {
 
 	private String name;
 
-	private String text;
+	private String label;
+
+	private String type;
+
+	@Nullable
+	private Options options;
+
+	@Nullable
+	private Attributes attributes;
 
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 	Question(@JsonProperty("name") String name,
-			 @JsonProperty("text") String text) {
+			 @JsonProperty("label") String label,
+			 @JsonProperty("type") String type,
+			 @JsonProperty("options") Options options,
+			 @JsonProperty("attributes") Attributes attributes) {
 		this.name = Objects.requireNonNull(name);
-		this.text = Objects.requireNonNull(text);
+		this.label = Objects.requireNonNull(label);
+		this.type = Objects.requireNonNullElse(type, "input");
+		this.options = options;
+		this.attributes = attributes;
 	}
 
 	public String getName() {
 		return name;
 	}
 
-	public String getText() {
-		return text;
+	public String getLabel() {
+		return label;
+	}
+
+	@Nullable
+	public String getType() {
+		return type;
+	}
+
+	@Nullable
+	public Options getOptions() {
+		return options;
+	}
+
+	@Nullable
+	public Attributes getAttributes() {
+		return attributes;
 	}
 
 	@Override
 	public String toString() {
 		return "Question{" +
 				"name='" + name + '\'' +
-				", text='" + text + '\'' +
+				", label='" + label + '\'' +
+				", type='" + type + '\'' +
+				", options=" + options +
+				", attributes=" + attributes +
 				'}';
 	}
 }
