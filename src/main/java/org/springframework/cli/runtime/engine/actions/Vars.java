@@ -17,39 +17,33 @@
 
 package org.springframework.cli.runtime.engine.actions;
 
-import java.util.Objects;
+import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.springframework.lang.Nullable;
 
-public class Question {
+public class Vars {
 
-	private String name;
+	private List<Question> questions;
 
-	private String text;
-
-	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	Question(@JsonProperty("name") String name,
-			 @JsonProperty("text") String text) {
-		this.name = Objects.requireNonNull(name);
-		this.text = Objects.requireNonNull(text);
+	Vars(@JsonProperty("questions") @Nullable List<Question> questions) {
+		this.questions = questions;
 	}
 
-	public String getName() {
-		return name;
+	public List<Question> getQuestions() {
+		return questions;
 	}
 
-	public String getText() {
-		return text;
-	}
+	// files
+
+	// key-values
+
 
 	@Override
 	public String toString() {
-		return "Question{" +
-				"name='" + name + '\'' +
-				", text='" + text + '\'' +
+		return "Vars{" +
+				"questions=" + questions +
 				'}';
 	}
 }

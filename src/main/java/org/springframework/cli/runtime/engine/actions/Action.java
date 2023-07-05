@@ -43,7 +43,8 @@ public class Action {
 	@Nullable
 	private Exec exec;
 
-	private Define define;
+	@Nullable
+	private Vars vars;
 
 	@Nullable
 	private InjectMavenDependency injectMavenDependency;
@@ -63,7 +64,7 @@ public class Action {
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 	Action(@JsonProperty("generate") @Nullable Generate generate,
 			@JsonProperty("exec") @Nullable Exec exec,
-			@JsonProperty("define") @Nullable Define define,
+			@JsonProperty("vars") @Nullable Vars vars,
 			@JsonProperty("inject-maven-dependency") @Nullable InjectMavenDependency injectMavenDependency,
 			@JsonProperty("inject-maven-dependency-management") @Nullable InjectMavenDependencyManagement injectMavenDependencyManagement,
 			@JsonProperty("inject-maven-repository") @Nullable InjectMavenRepository injectMavenRepository,
@@ -72,7 +73,7 @@ public class Action {
 			@JsonProperty("inject") @Nullable Inject inject) {
 		this.generate = generate;
 		this.exec = exec;
-		this.define = define;
+		this.vars = vars;
 		this.injectMavenDependency = injectMavenDependency;
 		this.injectMavenDependencyManagement = injectMavenDependencyManagement;
 		this.injectMavenRepository = injectMavenRepository;
@@ -92,8 +93,8 @@ public class Action {
 	}
 
 	@Nullable
-	public Define getDefine() {
-		return define;
+	public Vars getVars() {
+		return vars;
 	}
 
 	@Nullable
@@ -138,7 +139,7 @@ public class Action {
 				"generate=" + generate +
 				", inject=" + inject +
 				", exec=" + exec +
-				", define=" + define +
+				", vars=" + vars +
 				", injectMavenDependency=" + injectMavenDependency +
 				", injectMavenDependencyManagement=" + injectMavenDependencyManagement +
 				", injectMavenRepository=" + injectMavenRepository +

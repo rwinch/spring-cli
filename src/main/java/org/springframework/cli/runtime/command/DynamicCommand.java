@@ -45,7 +45,6 @@ import org.springframework.cli.runtime.engine.actions.Action;
 import org.springframework.cli.runtime.engine.actions.ActionFileReader;
 import org.springframework.cli.runtime.engine.actions.ActionFileVisitor;
 import org.springframework.cli.runtime.engine.actions.ActionsFile;
-import org.springframework.cli.runtime.engine.actions.Define;
 import org.springframework.cli.runtime.engine.actions.Exec;
 import org.springframework.cli.runtime.engine.actions.Generate;
 import org.springframework.cli.runtime.engine.actions.Inject;
@@ -53,7 +52,8 @@ import org.springframework.cli.runtime.engine.actions.InjectMavenBuildPlugin;
 import org.springframework.cli.runtime.engine.actions.InjectMavenDependency;
 import org.springframework.cli.runtime.engine.actions.InjectMavenDependencyManagement;
 import org.springframework.cli.runtime.engine.actions.InjectMavenRepository;
-import org.springframework.cli.runtime.engine.actions.handlers.DefineActionHandler;
+import org.springframework.cli.runtime.engine.actions.Vars;
+import org.springframework.cli.runtime.engine.actions.handlers.VarsActionHandler;
 import org.springframework.cli.runtime.engine.actions.handlers.ExecActionHandler;
 import org.springframework.cli.runtime.engine.actions.handlers.GenerateActionHandler;
 import org.springframework.cli.runtime.engine.actions.handlers.InjectActionHandler;
@@ -269,13 +269,13 @@ public class DynamicCommand {
 					execActionHandler.executeShellCommand(exec);
 				}
 
-				Define define = action.getDefine();
-				if (define != null) {
+				Vars vars = action.getVars();
+				if (vars != null) {
 					if (terminalOptional.isEmpty()) {
 						throw new SpringCliException("Spring Shell Terminal not available to Define action.");
 					}
-					DefineActionHandler defineActionHandler = new DefineActionHandler(templateEngine, model, terminalMessage, terminalOptional.get());
-					defineActionHandler.execute(define);
+					VarsActionHandler varsActionHandler = new VarsActionHandler(templateEngine, model, terminalMessage, terminalOptional.get());
+					varsActionHandler.execute(vars);
 				}
 			}
 		}

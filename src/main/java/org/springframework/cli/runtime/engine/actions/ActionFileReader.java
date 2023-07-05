@@ -28,6 +28,7 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -75,10 +76,19 @@ public class ActionFileReader {
 			List<String> contents = Files.readAllLines(resource.getFile().toPath());
 			checkForMissingColonOnAction(contents, resource, jsonProcessingException);
 			checkForMissingArrayAfterActions(contents, resource, jsonProcessingException);
+			checkForMissingQuestionTextAndName(contents, resource, jsonProcessingException);
 
 		} catch (IOException ex) {
 			throw new SpringCliException("Could not read resource " + resource.getDescription() + " as a String.", ex);
 		}
+	}
+
+	private static void checkForMissingQuestionTextAndName(List<String> contents, Resource resource, JsonProcessingException jsonProcessingException) {
+		if (jsonProcessingException.getMessage().contains("Cannot construct instance of `org.springframework.cli.runtime.engine.actions.Question`, problem: `java.lang.NullPointerException`")) {
+			throw new SpringCliException("Could not deserialize action file " + resource.getDescription() +
+					".  You may have forgot to define 'name' or 'text' as fields directly under the '-question:' field.  " +
+					"Nested exception message is " + jsonProcessingException.getMessage());
+ 		}
 	}
 
 	private static void checkForMissingArrayAfterActions(List<String> contents, Resource resource, JsonProcessingException ex) {

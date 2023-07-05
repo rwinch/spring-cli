@@ -17,6 +17,7 @@
 
 package org.springframework.cli.runtime.engine.actions.handlers;
 
+import java.util.List;
 import java.util.Map;
 
 import org.jline.terminal.Terminal;
@@ -27,6 +28,7 @@ import org.springframework.cli.runtime.engine.actions.Define;
 import org.springframework.cli.runtime.engine.actions.From;
 import org.springframework.cli.runtime.engine.actions.Question;
 import org.springframework.cli.runtime.engine.actions.Var;
+import org.springframework.cli.runtime.engine.actions.Vars;
 import org.springframework.cli.runtime.engine.templating.TemplateEngine;
 import org.springframework.cli.util.TerminalMessage;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -43,9 +45,13 @@ import org.springframework.shell.style.ThemeSettings;
 
 import static org.springframework.cli.util.JavaUtils.inferType;
 
-public class DefineActionHandler {
+public class VarsActionHandler {
 
-	private static final Logger logger = LoggerFactory.getLogger(DefineActionHandler.class);
+	private static final Logger logger = LoggerFactory.getLogger(VarsActionHandler.class);
+
+	private TemplateExecutor templateExecutor	;
+
+	private DefaultResourceLoader resourceLoader;
 
 	private TemplateEngine templateEngine;
 
@@ -55,20 +61,48 @@ public class DefineActionHandler {
 
 	private Terminal terminal;
 
-	public DefineActionHandler(TemplateEngine templateEngine, Map<String, Object> model, TerminalMessage terminalMessage, Terminal terminal) {
+	public VarsActionHandler(TemplateEngine templateEngine, Map<String, Object> model, TerminalMessage terminalMessage, Terminal terminal) {
 		this.templateEngine = templateEngine;
 		this.model = model;
 		this.terminalMessage = terminalMessage;
 		this.terminal = terminal;
+		createResourceLoaderAndTemplateExecutor();
 	}
 
-	public void execute(Define define) {
-		System.out.println("Define: execute");
-		Var var = define.getVar();
-		From from = var.getFrom();
-		Question question = from.getQuestion();
+	public void execute(Vars vars) {
+		System.out.println("Vars: execute");
+		List<Question> questions = vars.getQuestions();
+
+		for (Question question : questions) {
+			processQuestion(question);
+		}
+
+	}
+
+	private void processQuestion(Question question) {
 		String questionText = question.getText();
 		String variableName = question.getName();
+		String resultValue = "";
+		ComponentFlow wizard = ComponentFlow.builder().reset()
+				.terminal(this.terminal)
+				.resourceLoader(this.resourceLoader)
+				.templateExecutor(this.templateExecutor)
+
+				// now the good stuff
+				.withStringInput(variableName) //this is the variable name
+				.name(questionText) // This is the text string the user sees.
+				.resultValue(resultValue)
+				.resultMode(ResultMode.ACCEPT)
+				.and().build();
+
+		ComponentFlowResult componentFlowResult = wizard.run();
+		ComponentContext<?> resultContext = componentFlowResult.getContext();
+
+		Object object = resultContext.get(variableName);
+		System.out.println("Collected '" + object + "' as value.  Inferred type " + inferType(object).getClass());
+	}
+
+	private void createResourceLoaderAndTemplateExecutor() {
 
 		ThemeRegistry themeRegistry = new ThemeRegistry();
 		themeRegistry.register(new Theme() {
@@ -83,26 +117,8 @@ public class DefineActionHandler {
 			}
 		});
 		ThemeResolver themeResolver = new ThemeResolver(themeRegistry, "default");
-		TemplateExecutor templateExecutor = new TemplateExecutor(themeResolver);
+		this.templateExecutor = new TemplateExecutor(themeResolver);
 
-		ResourceLoader resourceLoader = new DefaultResourceLoader();
-		String resultValue = "";
-		ComponentFlow wizard = ComponentFlow.builder().reset()
-				.terminal(this.terminal)
-				.resourceLoader(resourceLoader)
-				.templateExecutor(templateExecutor)
-
-				// now the good stuff
-				.withStringInput(variableName) //this is the variable name
-				.name(questionText) // This is the text string the user sees.
-				.resultValue(resultValue)
-				.resultMode(ResultMode.ACCEPT)
-				.and().build();
-
-		ComponentFlowResult componentFlowResult = wizard.run();
-		ComponentContext<?> resultContext = componentFlowResult.getContext();
-
-		Object object = resultContext.get(variableName);
-		System.out.println("Collected " + object + " as value.  Inferred type " + inferType(object).getClass());
+		this.resourceLoader = new DefaultResourceLoader();
 	}
 }

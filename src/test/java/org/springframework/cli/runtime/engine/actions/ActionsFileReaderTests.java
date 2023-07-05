@@ -17,28 +17,16 @@
 
 package org.springframework.cli.runtime.engine.actions;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UncheckedIOException;
-import java.util.Map;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.cli.SpringCliException;
 import org.springframework.cli.testutil.TestResourceUtils;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.util.FileCopyUtils;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class ActionsFileReadTests {
+public class ActionsFileReaderTests {
 
 //	@Test
 //	void readWithName() {
@@ -47,6 +35,31 @@ public class ActionsFileReadTests {
 //		ActionsFile actionsFile = actionFileReader.read(classPathResource);
 //		System.out.println(actionsFile.getActions());
 //	}
+
+	@Test
+	void readBadVars() {
+		ClassPathResource classPathResource = TestResourceUtils.qualifiedResource(getClass(), "bad-vars.yaml");
+		ActionFileReader actionFileReader = new ActionFileReader();
+
+		Exception exception = assertThrows(SpringCliException.class, () -> {
+			ActionsFile actionsFile = actionFileReader.read(classPathResource);
+		});
+
+		assertThat(exception.getMessage().contains("You may have forgot to define 'name' or 'text' as fields directly under the '-question:' field."));
+	}
+
+	@Test
+	void readVars() {
+		ClassPathResource classPathResource = TestResourceUtils.qualifiedResource(getClass(), "vars.yaml");
+		ActionFileReader actionFileReader = new ActionFileReader();
+		ActionsFile actionsFile = actionFileReader.read(classPathResource);
+		assertThat(actionsFile.getActions().size()).isEqualTo(1);
+		Action action = actionsFile.getActions().get(0);
+		Vars vars = action.getVars();
+		assertThat(vars.getQuestions().size()).isEqualTo(1);
+		assertThat(vars.getQuestions().get(0).getName()).isEqualTo("language");
+		assertThat(vars.getQuestions().get(0).getText()).isEqualTo("What is your primary language?");
+	}
 
 	@Test
 	void readInjectMavenDep() {
