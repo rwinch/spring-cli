@@ -123,6 +123,17 @@ public class DynamicCommand {
 			model.put(kebabOption, commandParserResult.value().toString());
 		}
 	}
+
+	/**
+	 * Adds to the model, values from the vars-{role}.yml file.
+	 * If any command line argument values were not explicitly passed in but are present
+	 * in the vars-{role}.yml file, the key-value pair will be present in the model available to actions.
+	 * If the command line argument was explicitly passed in and also present in the
+	 * vars-{role}.yml file, the key-value pair that was explicitly passed in is used and not
+	 * the key-value pair from the vars-{role}.yml file.
+	 * @param model  The model available to actions
+	 * @param commandContext The context of what CLI arguments were passed in.
+	 */
 	private void addRoleVariables(Map<String, Object> model, CommandContext commandContext) {
 		RoleService roleService = new RoleService();
 		String role = "";
@@ -266,7 +277,8 @@ public class DynamicCommand {
 				Exec exec = action.getExec();
 				if (exec != null) {
 					ExecActionHandler execActionHandler = new ExecActionHandler(templateEngine, model, dynamicSubCommandPath, terminalMessage);
-					execActionHandler.executeShellCommand(exec);
+					Map<String, Object> outputs = new HashMap<>();
+					execActionHandler.executeShellCommand(exec, outputs);
 				}
 
 				Vars vars = action.getVars();

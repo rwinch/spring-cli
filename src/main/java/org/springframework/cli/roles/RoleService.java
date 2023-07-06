@@ -47,7 +47,6 @@ public class RoleService {
 	private Path workingDirectory = IoUtils.getWorkingDirectory();
 
 	public RoleService() {
-
 	}
 
 	public RoleService(Path workingDirectory) {
@@ -128,6 +127,13 @@ public class RoleService {
 		}
 	}
 
+	/**
+	 * Given the role name, return the file that contains the role variables.
+	 * If the name is null or empty, the default file "vars.yml" is used.
+	 * Otherwise, the file name is vars-{role}.yml
+	 * @param name The name of the role.  Empty string implies the default role
+	 * @return the File with role variables.
+	 */
 	public File getFile(String name) {
 		createRolesDirectoryIfNecessary();
 		String fileName;

@@ -63,8 +63,6 @@ public class Exec {
 	@Nullable
 	private final String dir;
 
-	private final DefineExec define;
-
 	private final String jsonPath;
 
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -74,14 +72,12 @@ public class Exec {
 			//TODO change to "error-to"
 			@JsonProperty("errto") String errto,
 			@JsonProperty("dir") String dir,
-			@JsonProperty("define") DefineExec define,
 			@JsonProperty("json-path") String jsonPath) {
 		this.to = to;
 		this.command = command;
 		this.commandFile = commandFile;
 		this.errto = errto;
 		this.dir = Objects.requireNonNullElse(dir, "");
-		this.define = define;
 		this.jsonPath = jsonPath;
 	}
 
@@ -108,9 +104,6 @@ public class Exec {
 		return dir;
 	}
 
-	public DefineExec getDefine() {
-		return define;
-	}
 	@Nullable
 	public String getJsonPath() {
 		return jsonPath;
@@ -125,7 +118,6 @@ public class Exec {
 				", command='" + command + '\'' +
 				", commandFile='" + commandFile + '\'' +
 				", dir='" + dir + '\'' +
-				", define=" + define +
 				", jsonPath='" + jsonPath + '\'' +
 				'}';
 	}
