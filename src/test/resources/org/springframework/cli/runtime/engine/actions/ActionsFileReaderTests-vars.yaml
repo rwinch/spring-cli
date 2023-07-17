@@ -8,4 +8,4 @@ actions:
           options:
             exec:
               command: az group list
-              json-path: $[0].name
+              json-path: $[*].name

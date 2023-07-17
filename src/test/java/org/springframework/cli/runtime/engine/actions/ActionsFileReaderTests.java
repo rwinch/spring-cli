@@ -58,13 +58,13 @@ public class ActionsFileReaderTests {
 		Vars vars = action.getVars();
 		Question question = vars.getQuestions().get(0);
 		assertThat(vars.getQuestions().size()).isEqualTo(1);
-		assertThat(question.getName()).isEqualTo("language");
-		assertThat(question.getLabel()).isEqualTo("What is your primary language?");
+		assertThat(question.getName()).isEqualTo("resource-group");
+		assertThat(question.getLabel()).isEqualTo("Select a resource group.");
 		assertThat(question.getType()).isEqualTo("dropdown");
 		Options options = question.getOptions();
 		assertThat(options.getExec()).isNotNull();
 		assertThat(options.getExec().getCommand()).isEqualTo("az group list");
-		assertThat(options.getExec().getJsonPath()).isEqualTo("$[0].name");
+		assertThat(options.getExec().getJsonPath()).isEqualTo("$[*].name");
 	}
 
 	@Test
