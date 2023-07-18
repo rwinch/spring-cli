@@ -110,7 +110,7 @@ public class ExecHandlerTests {
 			@TempDir(cleanup = CleanupMode.ALWAYS) Path tempPath) {
 		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
 
-			Path outputPath = tempPath.resolve("result");
+			Path outputPath = tempPath.resolve("result.txt");
 			Path commandPath = Path.of("test-data")
 					.resolve("commands").resolve("exec-redirect")
 					.resolve("working").resolve("dir");

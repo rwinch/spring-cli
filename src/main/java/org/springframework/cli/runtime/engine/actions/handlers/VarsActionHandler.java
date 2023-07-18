@@ -140,8 +140,8 @@ public class VarsActionHandler {
 		Object object = resultContext.get(question.getName());
 		System.out.println("Collected '" + object + "' as value.  Inferred type " + inferType(object).getClass());
 
-		// store in default role for now
 		RoleService roleService = new RoleService();
+		// store in default role "" for now
 		roleService.updateRole("", question.getName(), object);
 
 	}
@@ -179,13 +179,15 @@ public class VarsActionHandler {
 		ComponentFlowResult componentFlowResult = componentFlow.run();
 		ComponentContext<?> resultContext = componentFlowResult.getContext();
 
-		Object object = resultContext.get(question.getName());
-		System.out.println("Collected '" + object + "' as value.  Inferred type " + inferType(object).getClass());
+		if (resultContext.containsKey(question.getName())) {
+			Object object = resultContext.get(question.getName());
+			System.out.println("Collected '" + object + "' as value.  Inferred type " + inferType(object).getClass());
 
-		// store in default role for now
-		RoleService roleService = new RoleService();
-		roleService.updateRole("", question.getName(), object);
-		System.out.println("Saved to default role in vars.yml");
+			// store in default role for now
+			RoleService roleService = new RoleService();
+			roleService.updateRole("", question.getName(), object);
+			System.out.println("Saved to default role in vars.yml");
+		}
 	}
 	private final static Comparator<SelectorItem<String>> NAME_COMPARATOR = (o1, o2) -> {
 		return o1.getName().compareTo(o2.getName());

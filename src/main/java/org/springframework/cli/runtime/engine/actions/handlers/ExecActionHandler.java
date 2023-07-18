@@ -142,21 +142,31 @@ public class ExecActionHandler {
 			// capture the output.
 			Optional<String> stderr = Optional.empty();
 			Optional<String> stdout = Optional.empty();
-			if (exec.getTo() == null && exec.getErrto() == null) {
+			if (exec.getTo() == null) {
 				stdout = readStringFromInputStream(process.getInputStream());
+			}
+			if (exec.getErrto() == null) {
 				stderr = readStringFromInputStream(process.getErrorStream());
 			}
 
 			boolean exited = process.waitFor(300, TimeUnit.SECONDS);
-
-			outputs.put(OUTPUT_STDOUT, stdout.get());
-			outputs.put(OUTPUT_STDERR, stderr.get());
 			outputs.put(OUTPUT_EXIT_VALUE, process.exitValue());
+
+			if (exec.getTo() == null) {
+				if (stdout.isPresent()) {
+					outputs.put(OUTPUT_STDOUT, stdout.get());
+				}
+			}
+			if (exec.getErrto() == null) {
+				if (stderr.isPresent()) {
+					outputs.put(OUTPUT_STDERR, stderr.get());
+				}
+			}
 
 			// Logging success or failure to terminal and optionally process stdout with JSON Path
 			if (exited) {
 				if (process.exitValue() == 0) {
-					terminalMessage.print("Command '" + StringUtils.arrayToDelimitedString(commands, " ") + "' executed successfully");
+					terminalMessage.print("Command  executed successfully");
 					if (exec.getJsonPath() != null) {
 						Optional<Object> jsonPathOutput = applyJsonPath(exec, stdout);
 						if (jsonPathOutput.isPresent()) {

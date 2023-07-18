@@ -17,14 +17,55 @@
 
 package org.springframework.cli.runtime.engine.actions.handlers;
 
-import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.cli.support.MockConfigurations.MockBaseConfig;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class VarsActionHandlerTests {
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.CleanupMode;
+import org.junit.jupiter.api.io.TempDir;
+
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cli.roles.RoleService;
+import org.springframework.cli.support.AbstractShellTests;
+import org.springframework.cli.support.CommandRunner;
+import org.springframework.cli.support.MockConfigurations.MockBaseConfig;
+import org.springframework.cli.support.MockConfigurations.MockUserConfig;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class VarsActionHandlerTests extends AbstractShellTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withUserConfiguration(MockBaseConfig.class);
 
 
+	@Test
+	@Disabled
+	void testDefineVarWithExec(@TempDir(cleanup = CleanupMode.ON_SUCCESS) Path workingDir) {
+		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
 
+
+			CommandRunner commandRunner = new CommandRunner.Builder(context)
+					.prepareProject("rest-service", workingDir)
+					.installCommandGroup("vars")
+					.executeCommand("vars/define")
+					.withTerminal(getTerminal())
+					.build();
+			commandRunner.run();
+
+			Thread.sleep(4000);
+
+			TestBuffer testBuffer = new TestBuffer().cr();
+			write(testBuffer.getBytes());
+
+			RoleService roleService = new RoleService();
+			Map<String, Object> map = roleService.loadAsMap("");
+			assertThat(map).containsKey("phone-number");
+		});
+
+	}
 }

@@ -1,7 +1,0 @@
-actions:
-  - define:
-      var:
-        from:
-          question:
-            name: language
-            text: What is your primary language?
