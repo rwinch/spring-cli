@@ -18,6 +18,7 @@
 package org.springframework.cli.runtime.engine.actions;
 
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -27,23 +28,29 @@ public class Vars {
 
 	private List<Question> questions;
 
-	Vars(@JsonProperty("questions") @Nullable List<Question> questions) {
+	public Map<String, Object> data;
+
+	// files
+
+	Vars(@JsonProperty("questions") @Nullable List<Question> questions,
+			@JsonProperty("data") @Nullable Map<String, Object> data) {
 		this.questions = questions;
+		this.data = data;
 	}
 
 	public List<Question> getQuestions() {
 		return questions;
 	}
 
-	// files
-
-	// key-values
-
+	public Map<String, Object> getData() {
+		return data;
+	}
 
 	@Override
 	public String toString() {
 		return "Vars{" +
 				"questions=" + questions +
+				", data=" + data +
 				'}';
 	}
 }

@@ -22,10 +22,10 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 
 import org.jline.terminal.Terminal;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.springframework.cli.SpringCliException;
 import org.springframework.cli.roles.RoleService;
@@ -35,7 +35,6 @@ import org.springframework.cli.runtime.engine.actions.Vars;
 import org.springframework.cli.runtime.engine.templating.TemplateEngine;
 import org.springframework.cli.util.TerminalMessage;
 import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.lang.Nullable;
 import org.springframework.shell.component.context.ComponentContext;
 import org.springframework.shell.component.flow.ComponentFlow;
 import org.springframework.shell.component.flow.ComponentFlow.Builder;
@@ -52,26 +51,26 @@ import static org.springframework.cli.util.JavaUtils.inferType;
 
 public class VarsActionHandler {
 
-	private static final Logger logger = LoggerFactory.getLogger(VarsActionHandler.class);
-
-	private TemplateExecutor templateExecutor	;
+	private TemplateExecutor templateExecutor;
 
 	private DefaultResourceLoader resourceLoader;
 
-	private TemplateEngine templateEngine;
+	private final TemplateEngine templateEngine;
 
-	private Map<String, Object> model;
+	private final Map<String, Object> model;
 
-	@Nullable
-	private Path dynamicSubCommandPath;
+	private final Path cwd;
 
-	private TerminalMessage terminalMessage;
+	private final Path dynamicSubCommandPath;
 
-	private Terminal terminal;
+	private final TerminalMessage terminalMessage;
 
-	public VarsActionHandler(TemplateEngine templateEngine, Map<String, Object> model, Path dynamicSubCommandPath, TerminalMessage terminalMessage, Terminal terminal) {
+	private final Terminal terminal;
+
+	public VarsActionHandler(TemplateEngine templateEngine, Map<String, Object> model, Path cwd, Path dynamicSubCommandPath, TerminalMessage terminalMessage, Terminal terminal) {
 		this.templateEngine = templateEngine;
 		this.model = model;
+		this.cwd = cwd;
 		this.dynamicSubCommandPath = dynamicSubCommandPath;
 		this.terminalMessage = terminalMessage;
 		this.terminal = terminal;
@@ -80,19 +79,38 @@ public class VarsActionHandler {
 
 	public void execute(Vars vars) {
 		validate(vars);
-		List<Question> questions = vars.getQuestions();
-		for (Question question : questions) {
-			processQuestion(question);
+		if (vars.getQuestions() != null) {
+			List<Question> questions = vars.getQuestions();
+			for (Question question : questions) {
+				processQuestion(question);
+			}
 		}
+		processData(vars.getData());
 
+	}
+
+	private void processData(Map<String, Object> data) {
+		if (data == null || data.isEmpty()) {
+			return;
+		}
+		RoleService roleService = new RoleService(cwd);
+		// store in default role "" for now
+		for (Entry<String, Object> objectEntry : data.entrySet()) {
+			roleService.updateRole("", objectEntry.getKey(), objectEntry.getValue());
+		}
 	}
 
 	private void validate(Vars vars) {
-		List<Question> questions = vars.getQuestions();
-		ensureValidType(questions);
+		if (vars != null) {
+			List<Question> questions = vars.getQuestions();
+			ensureValidType(questions);
+		}
 	}
 
 	private void ensureValidType(List<Question> questions) {
+		if (questions == null) {
+			return;
+		}
 		for (Question question : questions) {
 			if (!isValidType(question.getType())) {
 				throw new SpringCliException("Invalid type '" + question.getType() +
@@ -102,24 +120,38 @@ public class VarsActionHandler {
 	}
 
 	private boolean isValidType(String type) {
+		if (type == null) {
+			throw new SpringCliException("Question type can not be null.  Choose from 'input', 'dropdwon' or 'path'.");
+		}
 		return type.equals("input") || type.equals("dropdown") || type.equals("path");
 	}
 
 	private void processQuestion(Question question) {
 
+		if (Objects.isNull(question)) {
+			throw new SpringCliException("Question field is null.  Add a question: field");
+		}
+		if (Objects.isNull(question.getType())) {
+			throw new SpringCliException("Question type " + question.getType() + " is null.  Valid options are 'input', 'dropwdown', and 'path'.");
+		}
+
 		Builder builder = ComponentFlow.builder().reset()
 				.terminal(this.terminal)
 				.resourceLoader(this.resourceLoader)
 				.templateExecutor(this.templateExecutor);
-		String type = question.getType();
-		if ("input".equals(type)) {
-			processInputQuestion(question, builder);
-		}
-		if ("dropdown".equals(type)) {
-			processDropdownQuestion(question, builder);
-		}
-		if ("path".equals(type)) {
-			processPathQuestion(question, builder);
+
+		switch (question.getType()) {
+			case "input":
+				processInputQuestion(question, builder);
+				break;
+			case "dropdown":
+				processDropdownQuestion(question, builder);
+				break;
+			case "path":
+				processPathQuestion(question, builder);
+				break;
+			default:
+				throw new SpringCliException("Question type " + question.getType() + " is not valid.  Valid options are 'input', 'dropwdown', and 'path'.");
 		}
 	}
 
@@ -138,23 +170,21 @@ public class VarsActionHandler {
 		ComponentContext<?> resultContext = componentFlowResult.getContext();
 
 		Object object = resultContext.get(question.getName());
-		System.out.println("Collected '" + object + "' as value.  Inferred type " + inferType(object).getClass());
 
 		RoleService roleService = new RoleService();
 		// store in default role "" for now
-		roleService.updateRole("", question.getName(), object);
+		roleService.updateRole("", question.getName(), inferType(object));
 
 	}
 
 
 	private void processPathQuestion(Question question, Builder builder) {
-
+		throw new SpringCliException("Unsupported path question type");
 	}
 
 	private void processDropdownQuestion(Question question, Builder builder) {
-		String resultValue = "";
 		boolean isMultiple = false;
-		if (question.getAttributes() != null) {
+		if (Objects.nonNull(question.getAttributes())) {
 			isMultiple = question.getAttributes().isMultiple();
 		}
 		if (isMultiple) {
@@ -166,6 +196,9 @@ public class VarsActionHandler {
 
 	private void processSingleItemSelector(Question question, Builder builder) {
 		String resultValue = "";
+		if (Objects.isNull(question.getOptions())) {
+			return;
+		}
 		Map<String, String> options = getOptions(question.getOptions());
 		ComponentFlow componentFlow = builder.withSingleItemSelector(question.getName())
 				.name(question.getLabel())
@@ -181,12 +214,9 @@ public class VarsActionHandler {
 
 		if (resultContext.containsKey(question.getName())) {
 			Object object = resultContext.get(question.getName());
-			System.out.println("Collected '" + object + "' as value.  Inferred type " + inferType(object).getClass());
-
 			// store in default role for now
 			RoleService roleService = new RoleService();
-			roleService.updateRole("", question.getName(), object);
-			System.out.println("Saved to default role in vars.yml");
+			roleService.updateRole("", question.getName(), inferType(object));
 		}
 	}
 	private final static Comparator<SelectorItem<String>> NAME_COMPARATOR = (o1, o2) -> {
@@ -217,9 +247,8 @@ public class VarsActionHandler {
 			// TODO review
 			return (Map<String,String>)jsonPathObject;
 		}
-		else if (jsonPathObject instanceof List) {
+		else if (jsonPathObject instanceof List list) {
 			Map<String, String> map = new HashMap<>();
-			List list = (List)jsonPathObject;
 			for (Object listItem : list) {
 				map.put(listItem.toString(), listItem.toString());
 			}
@@ -231,7 +260,7 @@ public class VarsActionHandler {
 	}
 
 	private void processMultiItemSelector(Question question, Builder builder) {
-
+		throw new SpringCliException("Unsupported question type multi-item-selector");
 	}
 
 

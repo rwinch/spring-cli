@@ -39,6 +39,7 @@ import org.springframework.core.io.Resource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Mockito.mock;
 
 public class CommandRunner {
 
@@ -69,7 +70,7 @@ public class CommandRunner {
 			String[] commandAndSubCommand = executeCommand.split("\\/");
 			Map<String, ModelPopulator> modelPopulatorMap = context.getBeansOfType(ModelPopulator.class);
 			DynamicCommand dynamicCommand = new DynamicCommand(commandAndSubCommand[0], commandAndSubCommand[1],
-					new ArrayList<>(modelPopulatorMap.values()), TerminalMessage.noop(), Optional.of(terminal));
+					new ArrayList<>(modelPopulatorMap.values()), TerminalMessage.noop(), Optional.of(this.terminal));
 
 			Map<String, Object> model = new HashMap<>();
 			for (Entry<String, String> argument : arguments) {
@@ -103,7 +104,7 @@ public class CommandRunner {
 
 		private String executeCommand;
 
-		private Terminal terminal;
+		private Terminal terminal = mock(Terminal.class);
 
 		private List<Map.Entry<String, String>> arguments = new ArrayList<>();
 

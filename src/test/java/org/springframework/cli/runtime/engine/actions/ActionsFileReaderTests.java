@@ -17,16 +17,19 @@
 
 package org.springframework.cli.runtime.engine.actions;
 
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cli.SpringCliException;
 import org.springframework.cli.testutil.TestResourceUtils;
 import org.springframework.core.io.ClassPathResource;
 
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class ActionsFileReaderTests {
+class ActionsFileReaderTests {
 
 //	@Test
 //	void readWithName() {
@@ -45,7 +48,23 @@ public class ActionsFileReaderTests {
 			ActionsFile actionsFile = actionFileReader.read(classPathResource);
 		});
 
-		assertThat(exception.getMessage().contains("You may have forgot to define 'name' or 'text' as fields directly under the '- question:' field."));
+		assertThat(exception.getMessage()).contains("You may have forgot to define 'name' or 'label' as fields directly under the '-question:' field");
+	}
+
+	@Test
+	void readKeyValueVars() {
+		ClassPathResource classPathResource = TestResourceUtils.qualifiedResource(getClass(), "vars-data.yaml");
+		ActionFileReader actionFileReader = new ActionFileReader();
+		ActionsFile actionsFile = actionFileReader.read(classPathResource);
+		assertThat(actionsFile.getActions()).hasSize(1);
+		Action action = actionsFile.getActions().get(0);
+		Vars vars = action.getVars();
+		Map<String, Object> data = vars.getData();
+		assertThat(data)
+				.containsEntry("name", "John")
+				.containsEntry("age", 30)
+				.containsEntry("person", true);
+
 	}
 
 	@Test
@@ -53,11 +72,11 @@ public class ActionsFileReaderTests {
 		ClassPathResource classPathResource = TestResourceUtils.qualifiedResource(getClass(), "vars.yaml");
 		ActionFileReader actionFileReader = new ActionFileReader();
 		ActionsFile actionsFile = actionFileReader.read(classPathResource);
-		assertThat(actionsFile.getActions().size()).isEqualTo(1);
+		assertThat(actionsFile.getActions()).hasSize(1);
 		Action action = actionsFile.getActions().get(0);
 		Vars vars = action.getVars();
 		Question question = vars.getQuestions().get(0);
-		assertThat(vars.getQuestions().size()).isEqualTo(1);
+		assertThat(vars.getQuestions()).hasSize(1);
 		assertThat(question.getName()).isEqualTo("resource-group");
 		assertThat(question.getLabel()).isEqualTo("Select a resource group.");
 		assertThat(question.getType()).isEqualTo("dropdown");
@@ -73,11 +92,11 @@ public class ActionsFileReaderTests {
 
 		ActionFileReader actionFileReader = new ActionFileReader();
 		ActionsFile actionsFile = actionFileReader.read(classPathResource);
-		assertThat(actionsFile.getActions().size()).isEqualTo(1);
-		assertThat(actionsFile.getActions().get(0).getInjectMavenDependency().getText().contains("spring-boot-starter-data-jpa"));
-		assertThat(actionsFile.getActions().get(0).getInjectMavenDependency().getText().contains("com.h2database"));
-		assertThat(actionsFile.getActions().get(0).getInjectMavenDependency().getText().contains("spring-boot-starter-test"));
-		//.getArtifactId()).isEqualTo("spring-cloud-azure-starter-jdbc-postgresql");
+		assertThat(actionsFile.getActions()).hasSize(1);
+		String text = actionsFile.getActions().get(0).getInjectMavenDependency().getText();
+		assertThat(text).contains("spring-boot-starter-data-jpa")
+				.contains("com.h2database")
+				.contains("spring-boot-starter-test");
 	}
 
 

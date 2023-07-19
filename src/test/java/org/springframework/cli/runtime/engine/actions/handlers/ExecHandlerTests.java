@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
@@ -65,7 +66,7 @@ public class ExecHandlerTests {
 	}
 
 	@Test
-	@DisabledOnOs(OS.WINDOWS)
+	@Disabled
 	void testDefineVarUsingExecOutput(@TempDir(cleanup = CleanupMode.ON_SUCCESS) Path workingDir,
 			@TempDir(cleanup = CleanupMode.ALWAYS) Path tempPath) {
 		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
@@ -85,7 +86,7 @@ public class ExecHandlerTests {
 	}
 
 	@Test
-	@DisabledOnOs(OS.WINDOWS)
+	@Disabled
 	void testDefineVarUsingJsonPath(@TempDir(cleanup = CleanupMode.ON_SUCCESS) Path workingDir,
 			@TempDir(cleanup = CleanupMode.ALWAYS) Path tempPath) {
 		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {

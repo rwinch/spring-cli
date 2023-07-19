@@ -19,9 +19,6 @@ package org.springframework.cli.runtime.engine.actions.handlers;
 
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -42,6 +39,27 @@ public class VarsActionHandlerTests extends AbstractShellTests {
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withUserConfiguration(MockBaseConfig.class);
 
+	@Test
+	void testDefineVarWithData(@TempDir(cleanup = CleanupMode.ON_SUCCESS) Path workingDir) {
+		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
+
+			CommandRunner commandRunner = new CommandRunner.Builder(context)
+					.prepareProject("rest-service", workingDir)
+					.installCommandGroup("vars")
+					.executeCommand("vars/data")
+					.build();
+			commandRunner.run();
+
+			RoleService roleService = new RoleService(workingDir);
+			Map<String, Object> map = roleService.loadAsMap("");
+
+			assertThat(map)
+					.containsEntry("name", "John")
+					.containsEntry("age", 30)
+					.containsEntry("person", true);
+		});
+
+	}
 
 	@Test
 	@Disabled
