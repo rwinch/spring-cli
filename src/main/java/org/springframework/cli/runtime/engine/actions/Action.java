@@ -28,7 +28,9 @@ import org.springframework.lang.Nullable;
  */
 public class Action {
 
-	// These are the three general purpose actions
+
+	@Nullable
+	private String ifExpression;
 
 	/**
 	 * Where to generate the template, relative to the {@code destinationDirectory}. May
@@ -62,7 +64,8 @@ public class Action {
 	private final InjectProperties injectProperties;
 
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-	Action(@JsonProperty("generate") @Nullable Generate generate,
+	Action(@JsonProperty("if") @Nullable String ifExpression,
+			@JsonProperty("generate") @Nullable Generate generate,
 			@JsonProperty("exec") @Nullable Exec exec,
 			@JsonProperty("vars") @Nullable Vars vars,
 			@JsonProperty("inject-maven-dependency") @Nullable InjectMavenDependency injectMavenDependency,
@@ -71,6 +74,7 @@ public class Action {
 			@JsonProperty("inject-maven-build-plugin") @Nullable InjectMavenBuildPlugin injectMavenBuildPlugin,
 			@JsonProperty("inject-properties") @Nullable InjectProperties injectProperties,
 			@JsonProperty("inject") @Nullable Inject inject) {
+		this.ifExpression = ifExpression;
 		this.generate = generate;
 		this.exec = exec;
 		this.vars = vars;
@@ -80,6 +84,11 @@ public class Action {
 		this.injectMavenBuildPlugin = injectMavenBuildPlugin;
 		this.injectProperties = injectProperties;
 		this.inject = inject;
+	}
+
+	@Nullable
+	public String getIfExpression() {
+		return ifExpression;
 	}
 
 	@Nullable
@@ -136,7 +145,8 @@ public class Action {
 	@Override
 	public String toString() {
 		return "Action{" +
-				"generate=" + generate +
+				"if='" + ifExpression + '\'' +
+				", generate=" + generate +
 				", inject=" + inject +
 				", exec=" + exec +
 				", vars=" + vars +

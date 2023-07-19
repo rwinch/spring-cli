@@ -62,6 +62,7 @@ import org.springframework.cli.runtime.engine.actions.handlers.InjectMavenDepend
 import org.springframework.cli.runtime.engine.actions.handlers.InjectMavenDependencyManagementActionHandler;
 import org.springframework.cli.runtime.engine.actions.handlers.InjectMavenRepositoryActionHandler;
 import org.springframework.cli.runtime.engine.model.ModelPopulator;
+import org.springframework.cli.runtime.engine.spel.SpELCondition;
 import org.springframework.cli.runtime.engine.templating.HandlebarsTemplateEngine;
 import org.springframework.cli.runtime.engine.templating.TemplateEngine;
 import org.springframework.cli.util.IoUtils;
@@ -234,6 +235,21 @@ public class DynamicCommand {
 			}
 
 			for (Action action : actions) {
+
+				RoleService roleService = new RoleService(cwd);
+				// TODO load from default role for now, later a list of roles
+				Map<String, Object> varMap = roleService.loadAsMap("");
+				model.putAll(varMap);
+
+				String ifExpression = action.getIfExpression();
+				if (StringUtils.hasText(ifExpression)) {
+					SpELCondition condition = new SpELCondition(ifExpression);
+					boolean evaluationResult = condition.evaluate(model);
+					if (!evaluationResult) {
+						continue;
+					}
+				}
+
 				Generate generate = action.getGenerate();
 				if (generate != null) {
 					GenerateActionHandler generateActionHandler = new GenerateActionHandler(templateEngine, model, cwd, dynamicSubCommandPath, terminalMessage);

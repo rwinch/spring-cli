@@ -75,11 +75,6 @@ public class SpringCliConfiguration {
 	}
 
 	@Bean
-	public ModelPopulator rootPackageModelPopulator() {
-		return new RootPackageModelPopulator();
-	}
-
-	@Bean
 	public DynamicMethodCommandResolver dynamicMethodTargetRegistrar(Collection<ModelPopulator> modelPopulators,
 			CommandRegistration.BuilderSupplier builder, TerminalMessage terminalMessage, ObjectProvider<Terminal> terminalProvider) {
 		return new DynamicMethodCommandResolver(modelPopulators, builder, terminalMessage, terminalProvider);

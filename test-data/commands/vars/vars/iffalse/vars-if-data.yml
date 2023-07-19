@@ -1,5 +1,5 @@
 actions:
-  - if: "#{ ['name'] == null }"
+  - if: "#{ false }"
     vars:
       data:
         name: John

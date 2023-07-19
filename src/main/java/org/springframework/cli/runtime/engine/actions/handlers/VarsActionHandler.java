@@ -96,6 +96,7 @@ public class VarsActionHandler {
 		RoleService roleService = new RoleService(cwd);
 		// store in default role "" for now
 		for (Entry<String, Object> objectEntry : data.entrySet()) {
+			System.out.println("saving in " + cwd.toAbsolutePath() + " map entry: " + objectEntry.getKey()  + "=" + objectEntry.getValue());
 			roleService.updateRole("", objectEntry.getKey(), objectEntry.getValue());
 		}
 	}

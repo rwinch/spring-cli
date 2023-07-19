@@ -40,6 +40,51 @@ public class VarsActionHandlerTests extends AbstractShellTests {
 			.withUserConfiguration(MockBaseConfig.class);
 
 	@Test
+	void testTrueIfExpressionDefineVarWithData(@TempDir(cleanup = CleanupMode.ON_SUCCESS) Path workingDir) {
+		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
+
+
+			CommandRunner commandRunner = new CommandRunner.Builder(context)
+					.prepareProject("rest-service", workingDir)
+					.installCommandGroup("vars")
+					.executeCommand("vars/iftrue")
+					.build();
+			commandRunner.run();
+
+
+			RoleService roleService = new RoleService(workingDir);
+			Map<String, Object> map = roleService.loadAsMap("");
+			assertThat(map)
+					.containsEntry("name", "John")
+					.containsEntry("age", 30)
+					.containsEntry("person", true);
+
+		});
+
+	}
+
+	@Test
+	void testFalseIfExpressionDefineVarWithData(@TempDir(cleanup = CleanupMode.ON_SUCCESS) Path workingDir) {
+		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
+
+
+			CommandRunner commandRunner = new CommandRunner.Builder(context)
+					.prepareProject("rest-service", workingDir)
+					.installCommandGroup("vars")
+					.executeCommand("vars/iffalse")
+					.build();
+			commandRunner.run();
+
+
+			RoleService roleService = new RoleService(workingDir);
+			Map<String, Object> map = roleService.loadAsMap("");
+			assertThat(map).isEmpty();
+
+		});
+
+	}
+
+	@Test
 	void testDefineVarWithData(@TempDir(cleanup = CleanupMode.ON_SUCCESS) Path workingDir) {
 		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
 
