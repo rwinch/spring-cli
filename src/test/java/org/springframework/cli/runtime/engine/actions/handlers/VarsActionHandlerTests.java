@@ -40,6 +40,34 @@ public class VarsActionHandlerTests extends AbstractShellTests {
 			.withUserConfiguration(MockBaseConfig.class);
 
 	@Test
+	void testExpressionDefineVarWithHandlebars(@TempDir(cleanup = CleanupMode.ON_SUCCESS) Path workingDir) {
+		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
+
+
+			CommandRunner commandRunner = new CommandRunner.Builder(context)
+					.prepareProject("rest-service", workingDir)
+					.installCommandGroup("vars")
+					.executeCommand("vars/data-handlebars")
+					.withArguments("name-to-use", "Mary") // TODO consider name collisions. ('name' or 'user-name') won't work
+					.withArguments("age", "20") //TODO change value to type Object
+					.withArguments("height-unit", "feet")
+					.withArguments("height", "6")
+					.withArguments("is-person", "true")
+					.build();
+			commandRunner.run();
+
+
+			RoleService roleService = new RoleService(workingDir);
+			Map<String, Object> map = roleService.loadAsMap("");
+			assertThat(map)
+					.containsEntry("name", "Mary")
+					.containsEntry("age", 20)
+					.containsEntry("height-in-feet", 6)
+					.containsEntry("person", true);
+		});
+	}
+
+	@Test
 	void testTrueIfExpressionDefineVarWithData(@TempDir(cleanup = CleanupMode.ON_SUCCESS) Path workingDir) {
 		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
 
@@ -60,7 +88,6 @@ public class VarsActionHandlerTests extends AbstractShellTests {
 					.containsEntry("person", true);
 
 		});
-
 	}
 
 	@Test

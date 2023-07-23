@@ -94,10 +94,12 @@ public class VarsActionHandler {
 			return;
 		}
 		RoleService roleService = new RoleService(cwd);
-		// store in default role "" for now
 		for (Entry<String, Object> objectEntry : data.entrySet()) {
-			System.out.println("saving in " + cwd.toAbsolutePath() + " map entry: " + objectEntry.getKey()  + "=" + objectEntry.getValue());
-			roleService.updateRole("", objectEntry.getKey(), objectEntry.getValue());
+			String keyToUse = templateEngine.process(objectEntry.getKey().toString(), model);
+			Object valueToUse = inferType(templateEngine.process(objectEntry.getValue().toString(), model));
+			// TODO store in default role "" for now
+			String roleName = "";
+			roleService.updateRole(roleName, keyToUse, valueToUse);
 		}
 	}
 

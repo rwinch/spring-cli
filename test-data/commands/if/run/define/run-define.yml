@@ -1,0 +1,5 @@
+actions:
+  - if: "#{  ! #exec('echo '{ 'firstName': 'John', 'lastName': 'doe'}').contains( ['John'] ) }"
+    vars:
+      data:
+        name: "John"

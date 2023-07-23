@@ -243,9 +243,13 @@ public class DynamicCommand {
 
 				String ifExpression = action.getIfExpression();
 				if (StringUtils.hasText(ifExpression)) {
-					SpELCondition condition = new SpELCondition(ifExpression);
+					String ifExpressionToUse = this.templateEngine.process(ifExpression, model);
+					SpELCondition condition = new SpELCondition(ifExpressionToUse);
 					boolean evaluationResult = condition.evaluate(model);
+					logger.debug("If Expression = " + ifExpression);
+					logger.debug("Evaluation Result " + evaluationResult);
 					if (!evaluationResult) {
+						logger.debug("Not execution action, evaluation result = false");
 						continue;
 					}
 				}

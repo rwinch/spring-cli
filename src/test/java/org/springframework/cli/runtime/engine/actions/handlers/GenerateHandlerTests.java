@@ -38,6 +38,25 @@ public class GenerateHandlerTests {
 			.withUserConfiguration(MockBaseConfig.class);
 
 	@Test
+	void generateJavaVersionFile(@TempDir(cleanup = CleanupMode.ON_SUCCESS) Path workingDir) {
+		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
+			CommandRunner commandRunner = new CommandRunner.Builder(context)
+					.prepareProject("rest-service", workingDir)
+					.installCommandGroup("generate")
+					.executeCommand("hello/new")
+					.withArguments("greeting", "World")  // TODO default values are not working in this test framework
+					.build();
+			commandRunner.run();
+			Path helloPath = workingDir.resolve("hello.txt");
+			assertThat(helloPath).exists();
+			String expectedContents = "Hello World with Java 8";
+			assertThat(helloPath.toFile()).hasContent(expectedContents);
+
+		});
+
+	}
+
+	@Test
 	@DisabledOnOs(OS.WINDOWS)
 	void generateFromFile(@TempDir(cleanup = CleanupMode.ON_SUCCESS) Path workingDir) {
 		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {

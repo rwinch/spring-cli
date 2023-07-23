@@ -1,0 +1,5 @@
+actions:
+  - if: "#{ #reverseString( '{{name}}' ) == 'kram' }"
+    vars:
+      data:
+        name: "mark-yes"

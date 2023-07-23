@@ -38,6 +38,24 @@ class IfExpressionTests {
 			.withUserConfiguration(MockBaseConfig.class);
 
 	@Test
+	void testIfExpressionsWithSpel(@TempDir(cleanup = CleanupMode.ON_SUCCESS) Path workingDir) {
+		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
+			CommandRunner commandRunner = new CommandRunner.Builder(context)
+					.prepareProject("rest-service", workingDir)
+					.installCommandGroup("if")
+					.executeCommand("vars/reverse")
+					.withArguments("name", "mark")
+					.build();
+			commandRunner.run();
+
+			RoleService roleService = new RoleService(workingDir);
+			Map<String, Object> map = roleService.loadAsMap("");
+			assertThat(map).containsEntry("name", "mark-yes");
+		});
+	}
+
+
+	@Test
 	void testIfExpressions(@TempDir(cleanup = CleanupMode.ON_SUCCESS) Path workingDir) {
 		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
 			CommandRunner commandRunner = new CommandRunner.Builder(context)
@@ -50,7 +68,7 @@ class IfExpressionTests {
 			RoleService roleService = new RoleService(workingDir);
 			Map<String, Object> map = roleService.loadAsMap("");
 
-			map.forEach((key, value) -> System.out.println(key + " " + value));
+			//map.forEach((key, value) -> System.out.println(key + " " + value));
 			assertThat(map)
 					.containsEntry("name", "John")
 					.containsEntry("middle-name", "Sam")
