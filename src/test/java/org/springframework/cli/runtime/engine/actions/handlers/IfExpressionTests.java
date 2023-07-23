@@ -38,6 +38,23 @@ class IfExpressionTests {
 			.withUserConfiguration(MockBaseConfig.class);
 
 	@Test
+	void testIfExpressionWithExecUtil(@TempDir(cleanup = CleanupMode.ON_SUCCESS) Path workingDir) {
+		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
+			CommandRunner commandRunner = new CommandRunner.Builder(context)
+					.prepareProject("rest-service", workingDir)
+					.installCommandGroup("if")
+					.executeCommand("run/define")
+					.build();
+			commandRunner.run();
+		});
+
+		RoleService roleService = new RoleService(workingDir);
+		Map<String, Object> map = roleService.loadAsMap("");
+		assertThat(map).containsEntry("name", "John is present in the output");
+	}
+
+
+	@Test
 	void testIfExpressionsWithSpel(@TempDir(cleanup = CleanupMode.ON_SUCCESS) Path workingDir) {
 		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
 			CommandRunner commandRunner = new CommandRunner.Builder(context)

@@ -1,5 +1,6 @@
 actions:
-  - if: "#{  ! #exec('echo '{ 'firstName': 'John', 'lastName': 'doe'}').contains( ['John'] ) }"
+#  - if: "#{  ! ['execUtil'].exec('input').contains( ['John'] ) }"
+  - if: "#{  (['execUtil'].execCommandFile('echo-command.txt')).contains( 'John' )  }"
     vars:
       data:
-        name: "John"
+        name: "John is present in the output"

@@ -52,10 +52,12 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 public class SpELCondition {
 
 	private final ExpressionParser parser = new SpelExpressionParser();
-	private final Expression compiledExpression;
+
 	private BeanResolver beanResolver;
 
-	private String expresssion;
+	private String expression;
+
+	private ParserContext parserContext;
 
 	public SpELCondition(String expression) {
 		this(expression, ParserContext.TEMPLATE_EXPRESSION);
@@ -65,14 +67,13 @@ public class SpELCondition {
 	}
 
 	public SpELCondition(String expression, ParserContext parserContext) {
-		this.expresssion = expression;
-		this.compiledExpression = parser.parseExpression(expression, parserContext);
+		this(expression, parserContext, null);
 	}
 
 	public SpELCondition(String expression, ParserContext parserContext, BeanResolver beanResolver) {
+		this.expression = expression;
+		this.parserContext = parserContext;
 		this.beanResolver = beanResolver;
-		this.expresssion = expression;
-		this.compiledExpression = parser.parseExpression(expression, parserContext);
 	}
 
 	public boolean evaluate(Map<String, Object> model) {
@@ -82,7 +83,7 @@ public class SpELCondition {
 
 		try {
 			context.registerFunction("reverseString",
-					RunUtil.class.getDeclaredMethod("reverseString",  String.class ));
+					SpelFunctions.class.getDeclaredMethod("reverseString",  String.class ));
 		}
 		catch (NoSuchMethodException ex) {
 			throw new SpringCliException("Can not register #reverseString function with SpEL", ex);
@@ -91,14 +92,15 @@ public class SpELCondition {
 		if (beanResolver != null) {
 			context.setBeanResolver(beanResolver);
 		}
+		Expression compiledExpression = parser.parseExpression(this.expression, this.parserContext);
 		Object expressionValue =  compiledExpression.getValue(context, Object.class);
 		if (Objects.isNull(expressionValue)) {
-			throw new SpringCliException("'if' expression: '" + this.expresssion + "' should return boolean.  Instead returned null.");
+			throw new SpringCliException("'if' expression: '" + this.expression + "' should return boolean.  Instead returned null.");
 		}
 		if (expressionValue instanceof Boolean boolValue) {
 			return boolValue;
 		} else {
-			throw new SpringCliException("'if' expression: '" + this.expresssion
+			throw new SpringCliException("'if' expression: '" + this.expression
 					+ "' should return boolean.  Instead returned class = "
 					+ expressionValue.getClass() + " with value = " + expressionValue.toString());
 

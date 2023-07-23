@@ -62,6 +62,7 @@ import org.springframework.cli.runtime.engine.actions.handlers.InjectMavenDepend
 import org.springframework.cli.runtime.engine.actions.handlers.InjectMavenDependencyManagementActionHandler;
 import org.springframework.cli.runtime.engine.actions.handlers.InjectMavenRepositoryActionHandler;
 import org.springframework.cli.runtime.engine.model.ModelPopulator;
+import org.springframework.cli.runtime.engine.spel.ExecUtil;
 import org.springframework.cli.runtime.engine.spel.SpELCondition;
 import org.springframework.cli.runtime.engine.templating.HandlebarsTemplateEngine;
 import org.springframework.cli.runtime.engine.templating.TemplateEngine;
@@ -243,7 +244,11 @@ public class DynamicCommand {
 
 				String ifExpression = action.getIfExpression();
 				if (StringUtils.hasText(ifExpression)) {
+					// Prepare to execute expression evaluation
 					String ifExpressionToUse = this.templateEngine.process(ifExpression, model);
+					ExecActionHandler execActionHandler = new ExecActionHandler(templateEngine, model, dynamicSubCommandPath, this.terminalMessage);
+					model.put("execUtil", new ExecUtil(execActionHandler));
+
 					SpELCondition condition = new SpELCondition(ifExpressionToUse);
 					boolean evaluationResult = condition.evaluate(model);
 					logger.debug("If Expression = " + ifExpression);

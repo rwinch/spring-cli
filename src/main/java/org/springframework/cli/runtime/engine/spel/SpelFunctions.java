@@ -17,7 +17,7 @@
 
 package org.springframework.cli.runtime.engine.spel;
 
-public abstract class RunUtil {
+public abstract class SpelFunctions {
 
 	public static String reverseString(String input) {
 		StringBuilder backwards = new StringBuilder();
@@ -26,5 +26,9 @@ public abstract class RunUtil {
 		}
 		return backwards.toString();
 	}
+
+//	public static String run(String input) {
+//
+//	}
 
 }
